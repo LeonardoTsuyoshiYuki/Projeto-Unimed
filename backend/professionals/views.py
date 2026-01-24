@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.core.mail import send_mail
 from .models import Professional, Document
-from .serializers import ProfessionalSerializer, DocumentSerializer
+from .serializers import ProfessionalSerializer, DocumentSerializer, ProfessionalManagementSerializer
 from audit.models import AuditLog
 
 class ProfessionalViewSet(viewsets.ModelViewSet):
@@ -14,7 +14,12 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['create']:
             return [permissions.AllowAny()]
-        return [permissions.IsAuthenticated()] # Admin only for list/retrieve/update
+        return [permissions.IsAdminUser()] # Admin only for list/retrieve/update
+
+    def get_serializer_class(self):
+        if self.action in ['update', 'partial_update'] and self.request.user.is_staff:
+            return ProfessionalManagementSerializer
+        return ProfessionalSerializer
 
     def perform_create(self, serializer):
         instance = serializer.save()

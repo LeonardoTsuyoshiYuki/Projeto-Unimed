@@ -31,6 +31,7 @@ class ProfessionalSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("O consentimento é obrigatório.")
         return value
 
+
     def validate_cpf(self, value):
         # Check 90 days rule
         ninety_days_ago = timezone.now() - timedelta(days=90)
@@ -47,3 +48,8 @@ class ProfessionalSerializer(serializers.ModelSerializer):
         if validated_data.get('consent_given'):
             validated_data['consent_date'] = timezone.now()
         return super().create(validated_data)
+
+class ProfessionalManagementSerializer(ProfessionalSerializer):
+    class Meta(ProfessionalSerializer.Meta):
+        # Remove 'status' from read_only_fields to allow Admin updates
+        read_only_fields = ['submission_date', 'consent_date']
