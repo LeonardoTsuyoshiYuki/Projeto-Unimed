@@ -77,7 +77,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import viewsets, permissions
 
-class DashboardViewSet(viewsets.ViewSet):
+class DashboardViewSet(viewsets.GenericViewSet):
     permission_classes = [permissions.IsAdminUser]
 
     def list(self, request):
