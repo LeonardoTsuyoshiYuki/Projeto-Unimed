@@ -34,6 +34,12 @@ class Professional(models.Model):
     # LGPD
     consent_given = models.BooleanField(default=False)
     consent_date = models.DateTimeField(null=True, blank=True)
+
+    # Audit
+    approved_by = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_professionals')
+    approved_at = models.DateTimeField(null=True, blank=True)
+    rejected_by = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='rejected_professionals')
+    rejected_at = models.DateTimeField(null=True, blank=True)
     
     class Meta:
         ordering = ['-submission_date']

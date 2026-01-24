@@ -2,6 +2,7 @@ from rest_framework import viewsets, permissions, status, parsers
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.core.mail import send_mail
+from django.utils import timezone
 from .models import Professional, Document
 from .serializers import ProfessionalSerializer, DocumentSerializer, ProfessionalManagementSerializer
 from audit.models import AuditLog
@@ -24,6 +25,13 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         instance = serializer.save()
         # Log action
+        AuditLog.objects.create(
+            user=self.request.user if self.request.user.is_authenticated else None,
+            action='CREATE',
+            target_model='Professional',
+            target_id=str(instance.id),
+            details=f"Professional registered: {instance.name}"
+        )
         # Email notification
         send_mail(
             'Recebemos seu cadastro - Unimed',
@@ -36,6 +44,16 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         instance = serializer.save()
         if self.request.user.is_authenticated:
+            # Audit Logic
+            if instance.status == 'APPROVED' and not instance.approved_by:
+                instance.approved_by = self.request.user
+                instance.approved_at = timezone.now()
+                instance.save()
+            elif instance.status == 'REJECTED' and not instance.rejected_by:
+                instance.rejected_by = self.request.user
+                instance.rejected_at = timezone.now()
+                instance.save()
+            
             AuditLog.objects.create(
                 user=self.request.user,
                 action='STATUS_CHANGE',
@@ -51,6 +69,7 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
                 [instance.email],
                 fail_silently=True,
             )
+
 
 from django.db.models import Count, Avg, F
 from django.db.models.functions import TruncMonth
