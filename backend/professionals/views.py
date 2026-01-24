@@ -54,32 +54,37 @@ from rest_framework.response import Response
 from rest_framework import viewsets, permissions
 
 class DashboardViewSet(viewsets.ViewSet):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAdminUser]
 
     def list(self, request):
-        # 1. Status Counts
+        now = timezone.now()
+        thirty_days_ago = now - timedelta(days=30)
+
+        # 1. Total Registrations
+        total_count = Professional.objects.count()
+
+        # 2. Status Counts
         status_counts = Professional.objects.values('status').annotate(count=Count('id'))
         
-        # 2. Monthly Volume (Last 12 months ideally, here taking all for simplicity or verify date range)
-        monthly_volume = Professional.objects.annotate(
+        # 3. Last 30 Days Count
+        last_30_days = Professional.objects.filter(submission_date__gte=thirty_days_ago).count()
+
+        # 4. Yearly Variation (Continuous Yearly)
+        # We will get the last 12 months for the trend
+        one_year_ago = now - timedelta(days=365)
+        monthly_volume = Professional.objects.filter(
+            submission_date__gte=one_year_ago
+        ).annotate(
             month=TruncMonth('submission_date')
         ).values('month').annotate(
             count=Count('id')
         ).order_by('month')
 
-        # 3. Efficiency (Avg time to Approve)
-        # Calculate duration only for Approved
-        # Note: This is an approximation using last_status_update. 
-        # Ideally we would calculate diff between submission and approval audit log.
-        # For this phase, we use the simple diff.
-        avg_time = Professional.objects.filter(status='APPROVED').annotate(
-            duration=F('last_status_update') - F('submission_date')
-        ).aggregate(avg_days=Avg('duration'))
-
         return Response({
+            'total_registrations': total_count,
+            'last_30_days': last_30_days,
             'status_counts': status_counts,
-            'monthly_volume': monthly_volume,
-            'efficiency': avg_time
+            'yearly_variation': monthly_volume,
         })
 
 class DocumentViewSet(viewsets.ModelViewSet):

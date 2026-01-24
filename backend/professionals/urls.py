@@ -5,7 +5,7 @@ from .views import ProfessionalViewSet, DocumentViewSet, DashboardViewSet
 router = DefaultRouter()
 router.register(r'professionals', ProfessionalViewSet)
 router.register(r'documents', DocumentViewSet)
-router.register(r'dashboard', DashboardViewSet, basename='dashboard')
+router.register(r'admin/dashboard', DashboardViewSet, basename='admin-dashboard')
 
 urlpatterns = [
     path('', include(router.urls)),
