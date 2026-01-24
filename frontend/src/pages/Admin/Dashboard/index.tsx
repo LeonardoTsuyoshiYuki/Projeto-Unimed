@@ -8,9 +8,10 @@ import api from '../../../services/api';
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 interface DashboardMetrics {
+    total_registrations: number;
+    last_30_days: number;
     status_counts: { status: string; count: number }[];
-    monthly_volume: { month: string; count: number }[];
-    efficiency: { avg_days: string | null };
+    yearly_variation: { month: string; count: number }[];
 }
 
 interface Professional {
@@ -30,14 +31,14 @@ export const Dashboard: React.FC = () => {
         const fetch = async () => {
             try {
                 const [metricsRes, listRes] = await Promise.all([
-                    api.get('/dashboard/'),
+                    api.get('/admin/dashboard/'),
                     api.get('/professionals/')
                 ]);
                 setMetrics(metricsRes.data);
                 setProfessionals(listRes.data.results || listRes.data);
             } catch (err) {
                 console.error(err);
-                // navigate('/admin'); // Commented out to debug
+                // navigate('/admin'); 
             }
         };
         fetch();
@@ -51,14 +52,15 @@ export const Dashboard: React.FC = () => {
         value: item.count
     }));
 
-    const areaData = metrics.monthly_volume.map(item => ({
+    const areaData = metrics.yearly_variation.map(item => ({
         name: new Date(item.month).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }),
         registrations: item.count
     }));
 
-    const total = metrics.status_counts.reduce((acc, curr) => acc + curr.count, 0);
     const pending = metrics.status_counts.find(s => s.status === 'PENDING')?.count || 0;
-    const avgDays = metrics.efficiency.avg_days ? parseFloat(metrics.efficiency.avg_days).toFixed(1) : '-';
+    const approved = metrics.status_counts.find(s => s.status === 'APPROVED')?.count || 0;
+    const rejected = metrics.status_counts.find(s => s.status === 'REJECTED')?.count || 0;
+    const adjustment = metrics.status_counts.find(s => s.status === 'ADJUSTMENT_REQUESTED')?.count || 0;
 
     return (
         <div className={styles.dashboard}>
@@ -68,21 +70,37 @@ export const Dashboard: React.FC = () => {
             </header>
 
             {/* KPI Cards */}
+            {/* KPI Cards */}
             <div className={styles.grid}>
                 <div className={styles.card}>
-                    <h3>Volume Total</h3>
-                    <p className={styles.bigNumber}>{total}</p>
-                    <span className={styles.label}>Profissionais Cadastrados</span>
+                    <h3>Total</h3>
+                    <p className={styles.bigNumber}>{metrics.total_registrations}</p>
+                    <span className={styles.label}>Cadastros</span>
                 </div>
                 <div className={styles.card}>
-                    <h3>Backlog</h3>
+                    <h3>Pendente</h3>
                     <p className={`${styles.bigNumber} ${styles.warning}`}>{pending}</p>
-                    <span className={styles.label}>Aguardando Análise</span>
+                    <span className={styles.label}>Aguardando</span>
                 </div>
                 <div className={styles.card}>
-                    <h3>Eficiência</h3>
-                    <p className={styles.bigNumber}>{avgDays} <small>dias</small></p>
-                    <span className={styles.label}>Tempo Médio de Aprovação</span>
+                    <h3>Aprovados</h3>
+                    <p className={`${styles.bigNumber} ${styles.success}`}>{approved}</p>
+                    <span className={styles.label}>Concluídos</span>
+                </div>
+                <div className={styles.card}>
+                    <h3>Reprovados</h3>
+                    <p className={`${styles.bigNumber} ${styles.error}`}>{rejected}</p>
+                    <span className={styles.label}>Negados</span>
+                </div>
+                <div className={styles.card}>
+                    <h3>Ajustes</h3>
+                    <p className={styles.bigNumber}>{adjustment}</p>
+                    <span className={styles.label}>Solicitados</span>
+                </div>
+                <div className={styles.card}>
+                    <h3>Últimos 30 dias</h3>
+                    <p className={styles.bigNumber}>{metrics.last_30_days}</p>
+                    <span className={styles.label}>Novos</span>
                 </div>
             </div>
 
