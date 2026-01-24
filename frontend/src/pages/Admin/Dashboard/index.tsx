@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './styles.module.css';
 import { Button } from '../../../components/ui/Button';
+import { Spinner } from '../../../components/ui/Spinner';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 import api from '../../../services/api';
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+const COLORS = ['#0088FE', '#00C49F', '#FF8042', '#FFBB28'];
 
 interface DashboardMetrics {
     total_registrations: number;
@@ -25,26 +27,52 @@ interface Professional {
 export const Dashboard: React.FC = () => {
     const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
     const [professionals, setProfessionals] = useState<Professional[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
 
+    const fetchData = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const [metricsRes, listRes] = await Promise.all([
+                api.get('/admin/dashboard/'),
+                api.get('/professionals/')
+            ]);
+            setMetrics(metricsRes.data);
+            setProfessionals(listRes.data.results || listRes.data);
+        } catch (err) {
+            console.error(err);
+            setError('Não foi possível carregar os dados. Tente novamente.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetch = async () => {
-            try {
-                const [metricsRes, listRes] = await Promise.all([
-                    api.get('/admin/dashboard/'),
-                    api.get('/professionals/')
-                ]);
-                setMetrics(metricsRes.data);
-                setProfessionals(listRes.data.results || listRes.data);
-            } catch (err) {
-                console.error(err);
-                // navigate('/admin'); 
-            }
-        };
-        fetch();
+        fetchData();
     }, [navigate]);
 
-    if (!metrics) return <div>Carregando...</div>;
+    if (loading) {
+        return (
+            <div className={styles.loadingContainer}>
+                <Spinner size="lg" color="var(--color-secondary)" />
+                <p>Carregando painel...</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className={styles.errorContainer}>
+                <h3>Ops! Algo deu errado.</h3>
+                <p>{error}</p>
+                <Button onClick={fetchData}>Tentar Novamente</Button>
+            </div>
+        );
+    }
+
+    if (!metrics) return null;
 
     // Transform Data for Charts
     const pieData = metrics.status_counts.map(item => ({
@@ -57,127 +85,136 @@ export const Dashboard: React.FC = () => {
         registrations: item.count
     }));
 
-    const pending = metrics.status_counts.find(s => s.status === 'PENDING')?.count || 0;
     const approved = metrics.status_counts.find(s => s.status === 'APPROVED')?.count || 0;
     const rejected = metrics.status_counts.find(s => s.status === 'REJECTED')?.count || 0;
     const adjustment = metrics.status_counts.find(s => s.status === 'ADJUSTMENT_REQUESTED')?.count || 0;
+    const pending = metrics.status_counts.find(s => s.status === 'PENDING')?.count || 0;
 
     return (
         <div className={styles.dashboard}>
             <header className={styles.header}>
-                <h2>Painel Administrativo</h2>
-                <Button variant="outline" onClick={() => navigate('/admin')}>Sair</Button>
+                <div>
+                    <h1>Dashboard Administrativo</h1>
+                    <p>Visão geral de credenciamentos e métricas</p>
+                </div>
+                <Button onClick={fetchData}>Atualizar</Button>
             </header>
 
-            {/* KPI Cards */}
             {/* KPI Cards */}
             <div className={styles.grid}>
                 <div className={styles.card}>
                     <h3>Total</h3>
                     <p className={styles.bigNumber}>{metrics.total_registrations}</p>
-                    <span className={styles.label}>Cadastros</span>
+                    <span className={styles.label}>Cadastros Totais</span>
                 </div>
                 <div className={styles.card}>
-                    <h3>Pendente</h3>
-                    <p className={`${styles.bigNumber} ${styles.warning}`}>{pending}</p>
-                    <span className={styles.label}>Aguardando</span>
+                    <h3>Pendentes</h3>
+                    <p className={`${styles.bigNumber} ${styles.warning} `}>{pending}</p>
+                    <span className={styles.label}>Aguardando Análise</span>
                 </div>
                 <div className={styles.card}>
                     <h3>Aprovados</h3>
-                    <p className={`${styles.bigNumber} ${styles.success}`}>{approved}</p>
-                    <span className={styles.label}>Concluídos</span>
+                    <p className={`${styles.bigNumber} ${styles.success} `}>{approved}</p>
+                    <span className={styles.label}>Credenciados</span>
                 </div>
                 <div className={styles.card}>
                     <h3>Reprovados</h3>
-                    <p className={`${styles.bigNumber} ${styles.error}`}>{rejected}</p>
+                    <p className={`${styles.bigNumber} ${styles.error} `}>{rejected}</p>
                     <span className={styles.label}>Negados</span>
                 </div>
                 <div className={styles.card}>
                     <h3>Ajustes</h3>
-                    <p className={styles.bigNumber}>{adjustment}</p>
+                    <p className={`${styles.bigNumber} ${styles.info} `}>{adjustment}</p>
                     <span className={styles.label}>Solicitados</span>
                 </div>
                 <div className={styles.card}>
-                    <h3>Últimos 30 dias</h3>
+                    <h3>Recentes</h3>
                     <p className={styles.bigNumber}>{metrics.last_30_days}</p>
-                    <span className={styles.label}>Novos</span>
+                    <span className={styles.label}>Últimos 30 dias</span>
                 </div>
             </div>
 
             {/* Charts Section */}
             <div className={styles.chartsRow}>
                 <div className={styles.chartContainer}>
-                    <h4>Variação de Custo (Volume Mensal)</h4>
-                    <div style={{ width: '100%', height: 300 }}>
-                        <ResponsiveContainer>
-                            <AreaChart data={areaData}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="name" />
-                                <YAxis />
-                                <Tooltip />
-                                <Area type="monotone" dataKey="registrations" stroke="#00995D" fill="#DCFCE7" />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
+                    <h4>Evolução de Cadastros</h4>
+                    {areaData.length > 0 ? (
+                        <div style={{ width: '100%', height: 300 }}>
+                            <ResponsiveContainer>
+                                <AreaChart data={areaData}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e0e0e0" />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#666' }} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#666' }} />
+                                    <Tooltip
+                                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                                    />
+                                    <Area type="monotone" dataKey="registrations" stroke="#0088FE" fill="#0088FE" fillOpacity={0.2} />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    ) : (
+                        <div className={styles.emptyChart}>Sem dados suficientes para o período.</div>
+                    )}
                 </div>
 
                 <div className={styles.chartContainer}>
-                    <h4>Distribuição de Status</h4>
-                    <div style={{ width: '100%', height: 300 }}>
-                        <ResponsiveContainer>
-                            <PieChart>
-                                <Pie
-                                    data={pieData}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={80}
-                                    fill="#8884d8"
-                                    paddingAngle={5}
-                                    dataKey="value"
-                                >
-                                    {pieData.map((_, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                    ))}
-                                </Pie>
-                                <Tooltip />
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </div>
+                    <h4>Distribuição por Status</h4>
+                    {pieData.length > 0 && metrics.total_registrations > 0 ? (
+                        <div style={{ width: '100%', height: 300 }}>
+                            <ResponsiveContainer>
+                                <PieChart>
+                                    <Pie
+                                        data={pieData}
+                                        innerRadius={60}
+                                        outerRadius={80}
+                                        paddingAngle={5}
+                                        dataKey="value"
+                                    >
+                                        {pieData.map((_, index) => (
+                                            <Cell key={`cell - ${index} `} fill={COLORS[index % COLORS.length]} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                    ) : (
+                        <div className={styles.emptyChart}>Nenhum cadastro para exibir.</div>
+                    )}
                 </div>
             </div>
 
-            {/* Table Section */}
+            {/* Recent Registrations Table */}
             <div className={styles.tableSection}>
-                <h4>Cadastros Recentes</h4>
-                <table className={styles.table}>
-                    <thead>
-                        <tr>
-                            <th>Nome</th>
-                            <th>CPF</th>
-                            <th>Data</th>
-                            <th>Status</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {professionals.slice(0, 5).map(p => (
-                            <tr key={p.id}>
-                                <td>{p.name}</td>
-                                <td>{p.cpf}</td>
-                                <td>{new Date(p.submission_date).toLocaleDateString()}</td>
-                                <td>
-                                    <span className={`${styles.status} ${styles[p.status.toLowerCase()]}`}>
-                                        {p.status}
-                                    </span>
-                                </td>
-                                <td>
-                                    <Button variant="ghost">Detalhes</Button>
-                                </td>
+                <h4>Solicitações Recentes</h4>
+                {professionals.length > 0 ? (
+                    <table className={styles.table}>
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>CPF</th>
+                                <th>Data</th>
+                                <th>Status</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {professionals.slice(0, 5).map(prof => (
+                                <tr key={prof.id}>
+                                    <td>{prof.name}</td>
+                                    <td>{prof.cpf}</td>
+                                    <td>{new Date(prof.submission_date).toLocaleDateString()}</td>
+                                    <td>
+                                        <span className={`${styles.status} ${styles[prof.status.toLowerCase()]} `}>
+                                            {prof.status}
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                ) : (
+                    <p className={styles.emptyState}>Nenhuma solicitação encontrada.</p>
+                )}
             </div>
         </div>
     );

@@ -1,6 +1,9 @@
 .dashboard {
     padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
     background-color: var(--color-background);
+    min-height: 100vh;
 }
 
 .header {
@@ -10,6 +13,35 @@
     margin-bottom: 2rem;
 }
 
+.header h1 {
+    font-size: 1.5rem;
+    color: var(--color-primary);
+    margin: 0;
+}
+
+.header p {
+    color: var(--color-text-muted);
+    margin: 0.25rem 0 0;
+}
+
+/* Loading & Error States */
+.loadingContainer,
+.errorContainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 60vh;
+    gap: 1rem;
+    color: var(--color-text-muted);
+}
+
+.errorContainer h3 {
+    color: var(--color-error);
+    margin: 0;
+}
+
+/* Grid Layout */
 .grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -24,10 +56,16 @@
     box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
 .card h3 {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     color: var(--color-text-muted);
     font-weight: 600;
     margin-bottom: 0.5rem;
@@ -36,16 +74,11 @@
 }
 
 .bigNumber {
-    font-size: 2rem;
+    font-size: 2.2rem;
     font-weight: 700;
     color: var(--color-secondary);
     margin: 0;
     line-height: 1.2;
-}
-
-.bigNumber small {
-    font-size: 1rem;
-    color: var(--color-text-muted);
 }
 
 .warning {
@@ -60,12 +93,18 @@
     color: var(--color-error);
 }
 
+.info {
+    color: #0369A1;
+}
+
 .label {
     font-size: 0.8rem;
     color: var(--color-text-muted);
-    margin-top: 0.5rem;
+    margin-top: auto;
+    padding-top: 0.5rem;
 }
 
+/* Charts */
 .chartsRow {
     display: grid;
     grid-template-columns: 2fr 1fr;
@@ -78,13 +117,29 @@
     padding: 1.5rem;
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    min-height: 380px;
 }
 
 .chartContainer h4 {
-    margin-bottom: 1.5rem;
+    margin: 0 0 1.5rem;
     color: var(--color-secondary);
+    font-weight: 600;
 }
 
+.emptyChart {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--color-text-muted);
+    background: #f8fafc;
+    border-radius: var(--radius-md);
+    border: 1px dashed #cbd5e1;
+}
+
+/* Table */
 .tableSection {
     background: white;
     padding: 1.5rem;
@@ -92,10 +147,14 @@
     box-shadow: var(--shadow-sm);
 }
 
+.tableSection h4 {
+    margin: 0 0 1rem;
+    color: var(--color-secondary);
+}
+
 .table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 1rem;
 }
 
 .table th,
@@ -103,18 +162,33 @@
     padding: 1rem;
     text-align: left;
     border-bottom: 1px solid #E2E8F0;
+    font-size: 0.95rem;
 }
 
 .table th {
     font-weight: 600;
     color: var(--color-text-muted);
+    background-color: #f8fafc;
 }
 
+.table tr:last-child td {
+    border-bottom: none;
+}
+
+.emptyState {
+    text-align: center;
+    padding: 2rem;
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+/* Status Badges */
 .status {
     padding: 0.25rem 0.75rem;
     border-radius: 999px;
     font-size: 0.75rem;
     font-weight: 600;
+    display: inline-block;
 }
 
 .pending {
@@ -137,8 +211,29 @@
     color: #0369A1;
 }
 
-@media (max-width: 900px) {
+/* Responsive */
+@media (max-width: 1024px) {
     .chartsRow {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .dashboard {
+        padding: 1rem;
+    }
+
+    .grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .tableSection {
+        overflow-x: auto;
     }
 }
