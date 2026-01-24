@@ -23,7 +23,7 @@ class Professional(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
-    cpf = models.CharField(max_length=11, unique=True)
+    cpf = models.CharField(max_length=11, db_index=True)
     email = models.EmailField()
     phone = models.CharField(max_length=20)
     

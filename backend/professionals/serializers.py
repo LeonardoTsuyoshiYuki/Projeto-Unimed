@@ -19,6 +19,17 @@ class ProfessionalSerializer(serializers.ModelSerializer):
             'consent_given', 'consent_date'
         ]
         read_only_fields = ['status', 'submission_date', 'consent_date']
+        extra_kwargs = {
+            'consent_given': {'required': True, 'allow_null': False},
+            'cpf': {'validators': []} # Disable default validators if any linger, though model change should suffice. 
+                                      # Actually DRF might still infer unique if model had it, but we changed model. 
+                                      # However, we should be explicit given the transition.
+        }
+
+    def validate_consent_given(self, value):
+        if value is not True:
+            raise serializers.ValidationError("O consentimento é obrigatório.")
+        return value
 
     def validate_cpf(self, value):
         # Check 90 days rule
