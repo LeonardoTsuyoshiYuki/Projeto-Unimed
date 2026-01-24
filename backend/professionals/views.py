@@ -7,6 +7,9 @@ from .models import Professional, Document
 from .serializers import ProfessionalSerializer, DocumentSerializer, ProfessionalManagementSerializer
 from audit.models import AuditLog
 
+import logging
+logger = logging.getLogger(__name__)
+
 class ProfessionalViewSet(viewsets.ModelViewSet):
     queryset = Professional.objects.all()
     serializer_class = ProfessionalSerializer
@@ -23,26 +26,58 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
         return ProfessionalSerializer
 
     def perform_create(self, serializer):
-        instance = serializer.save()
-        # Log action
-        AuditLog.objects.create(
-            user=self.request.user if self.request.user.is_authenticated else None,
-            action='CREATE',
-            target_model='Professional',
-            target_id=str(instance.id),
-            details=f"Professional registered: {instance.name}"
-        )
-        # Email notification
-        send_mail(
-            'Recebemos seu cadastro - Unimed',
-            f'Olá {instance.name}, recebemos seu cadastro e ele está em análise.',
-            'no-reply@unimed.com',
-            [instance.email],
-            fail_silently=True,
-        )
+        try:
+            instance = serializer.save()
+            logger.info(
+                "Registration created", 
+                extra={
+                    "event": "registration_created", 
+                    "professional_id": str(instance.id),
+                    "status": instance.status
+                }
+            )
+            
+            # Log action
+            AuditLog.objects.create(
+                user=self.request.user if self.request.user.is_authenticated else None,
+                action='CREATE',
+                target_model='Professional',
+                target_id=str(instance.id),
+                details=f"Professional registered: {instance.name}"
+            )
+            # Email notification
+            send_mail(
+                'Recebemos seu cadastro - Unimed',
+                f'Olá {instance.name}, recebemos seu cadastro e ele está em análise.',
+                'no-reply@unimed.com',
+                [instance.email],
+                fail_silently=True,
+            )
+        except Exception as e:
+            logger.error(
+                "Registration creation failed", 
+                extra={"event": "registration_failed", "error": str(e)}
+            )
+            raise e
 
     def perform_update(self, serializer):
+        old_instance = self.get_object()
+        old_status = old_instance.status
+        
         instance = serializer.save()
+        
+        if instance.status != old_status:
+             logger.info(
+                "Status changed", 
+                extra={
+                    "event": "status_change", 
+                    "professional_id": str(instance.id),
+                    "old_status": old_status,
+                    "new_status": instance.status,
+                    "changed_by": self.request.user.username if self.request.user.is_authenticated else "anonymous"
+                }
+            )
+
         if self.request.user.is_authenticated:
             # Audit Logic
             if instance.status == 'APPROVED' and not instance.approved_by:
@@ -54,13 +89,15 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
                 instance.rejected_at = timezone.now()
                 instance.save()
             
-            AuditLog.objects.create(
-                user=self.request.user,
-                action='STATUS_CHANGE',
-                target_model='Professional',
-                target_id=str(instance.id),
-                details=f"Status changed to {instance.status}"
-            )
+            if instance.status != old_status:
+                 AuditLog.objects.create(
+                    user=self.request.user,
+                    action='STATUS_CHANGE',
+                    target_model='Professional',
+                    target_id=str(instance.id),
+                    details=f"Status changed to {instance.status}"
+                )
+            
             # Send email on status change
             send_mail(
                 f'Atualização de Status - Unimed: {instance.get_status_display()}',
