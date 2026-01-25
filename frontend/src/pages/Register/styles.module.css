@@ -33,6 +33,35 @@
     margin-bottom: 0.5rem;
 }
 
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #334155;
+    margin-bottom: 0.25rem;
+}
+
+.selectInput {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 1rem;
+    background-color: white;
+    transition: border-color 0.2s;
+}
+
+.selectInput:focus {
+    outline: none;
+    border-color: #00995d;
+    box-shadow: 0 0 0 3px rgba(0, 153, 93, 0.1);
+}
+
 .fileSection {
     background-color: #f8fafc;
     padding: 1.5rem;

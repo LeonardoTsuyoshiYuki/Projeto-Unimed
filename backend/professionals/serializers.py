@@ -15,9 +15,9 @@ class ProfessionalSerializer(serializers.ModelSerializer):
         model = Professional
         fields = [
             'id', 'name', 'cpf', 'email', 'phone',
-            'birth_date', 'address', 'education', 'institution',
-            'graduation_year', 'council_name', 'council_number',
-            'specialty', 'experience_years', 'area_of_action',
+            'birth_date', 'zip_code', 'street', 'number', 'complement', 'neighborhood', 'city', 'state',
+            'education', 'institution', 'graduation_year', 
+            'council_name', 'council_number', 'experience_years', 'area_of_action',
             'status', 'submission_date', 'documents',
             'consent_given', 'consent_date'
         ]
