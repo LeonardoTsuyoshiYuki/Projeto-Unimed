@@ -1,6 +1,7 @@
 import pytest
+import uuid 
+from datetime import date
 from rest_framework.test import APIClient
-from django.contrib.auth.models import User
 from django.contrib.auth.models import User
 from professionals.models import Professional
 
@@ -55,6 +56,15 @@ class TestAPIHardening:
             cpf="55555555555",
             email="trans@test.com",
             phone="11999999999", 
+            birth_date=date(1990, 1, 1),
+            address="Trans St, 1",
+            education="Law",
+            institution="Trans Uni",
+            graduation_year=2010,
+            council_name="OAB",
+            council_number="99999",
+            specialty="Civil",
+            experience_years=10,
             consent_given=True,
             status="REJECTED"
         )

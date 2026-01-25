@@ -1,4 +1,5 @@
 import pytest
+from datetime import date
 from rest_framework.test import APIClient
 from django.contrib.auth.models import User
 from professionals.models import Professional, Document
@@ -18,6 +19,15 @@ class TestAuditLogic:
             cpf="77777777777",
             email="audit@test.com",
             phone="11999999999",
+            birth_date=date(2000, 1, 1),
+            address="Audit Lane, 10",
+            education="Auditing",
+            institution="Audit University",
+            graduation_year=2020,
+            council_name="AUD",
+            council_number="12345",
+            specialty="Internal",
+            experience_years=5,
             consent_given=True
         )
 
@@ -69,6 +79,15 @@ class TestAuditLogic:
             "cpf": "66666666666",
             "email": "log@test.com",
             "phone": "11888888888",
+            "birth_date": "2000-01-01",
+            "address": "Audit Lane, 10",
+            "education": "Auditing",
+            "institution": "Audit University",
+            "graduation_year": 2020,
+            "council_name": "AUD",
+            "council_number": "12345",
+            "specialty": "Internal",
+            "experience_years": 5,
             "consent_given": True
         }
         response = client.post('/api/professionals/', data)

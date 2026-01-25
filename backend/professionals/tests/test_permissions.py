@@ -1,5 +1,6 @@
 import pytest
 import uuid
+from datetime import date
 from rest_framework.test import APIClient
 from django.contrib.auth.models import User
 from professionals.models import Professional
@@ -18,6 +19,15 @@ class TestAccessControl:
             cpf="99999999999",
             email="pro@test.com",
             phone="11999999999",
+            birth_date=date(2000, 1, 1),
+            address="Pro Blvd, 1",
+            education="Law",
+            institution="Pro University",
+            graduation_year=2010,
+            council_name="OAB",
+            council_number="99999",
+            specialty="Tax",
+            experience_years=10,
             consent_given=True
         )
 
@@ -32,6 +42,15 @@ class TestAccessControl:
             "cpf": "88888888888",
             "email": "public@test.com",
             "phone": "11888888888",
+            "birth_date": "2000-01-01",
+            "address": "Public St, 5",
+            "education": "Arts",
+            "institution": "Public Uni",
+            "graduation_year": 2022,
+            "council_name": "None",
+            "council_number": "00000",
+            "specialty": "Design",
+            "experience_years": 1,
             "consent_given": True
         }
         response = client.post('/api/professionals/', data)

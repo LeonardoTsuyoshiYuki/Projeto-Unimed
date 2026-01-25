@@ -2,7 +2,7 @@ import uuid
 from django.db import models
 from django.core.validators import FileExtensionValidator
 from django.core.exceptions import ValidationError
-from datetime import timedelta
+from datetime import timedelta, date
 from django.utils import timezone
 
 def document_upload_path(instance, filename):
@@ -26,6 +26,20 @@ class Professional(models.Model):
     cpf = models.CharField(max_length=11, db_index=True)
     email = models.EmailField()
     phone = models.CharField(max_length=20)
+    
+    # Personal Data
+    birth_date = models.DateField()
+    address = models.TextField()
+
+    # Professional Data
+    education = models.CharField(max_length=255) # Formação Acadêmica
+    institution = models.CharField(max_length=255) # Instituição de Ensino
+    graduation_year = models.IntegerField() # Ano de Conclusão
+    council_name = models.CharField(max_length=50) # ex: CRM, COREN
+    council_number = models.CharField(max_length=50)
+    area_of_action = models.CharField(max_length=255, null=True, blank=True) # Área de Atuação (Optional)
+    specialty = models.CharField(max_length=255) # Especialidade
+    experience_years = models.IntegerField() # Tempo de Experiência
     
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='PENDING')
     submission_date = models.DateTimeField(auto_now_add=True)

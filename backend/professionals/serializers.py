@@ -14,7 +14,10 @@ class ProfessionalSerializer(serializers.ModelSerializer):
     class Meta:
         model = Professional
         fields = [
-            'id', 'name', 'cpf', 'email', 'phone', 
+            'id', 'name', 'cpf', 'email', 'phone',
+            'birth_date', 'address', 'education', 'institution',
+            'graduation_year', 'council_name', 'council_number',
+            'specialty', 'experience_years', 'area_of_action',
             'status', 'submission_date', 'documents',
             'consent_given', 'consent_date'
         ]

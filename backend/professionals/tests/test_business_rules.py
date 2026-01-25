@@ -1,6 +1,6 @@
 import pytest
 import uuid
-from datetime import timedelta
+from datetime import timedelta, date
 from django.utils import timezone
 from professionals.models import Professional
 from professionals.serializers import ProfessionalSerializer
@@ -15,6 +15,15 @@ class TestBusinessRules:
             cpf="12345678901",
             email="test@example.com",
             phone="11999999999",
+            birth_date=date(1990, 1, 1),
+            address="Rua Teste, 123",
+            education="Medicine",
+            institution="USP",
+            graduation_year=2015,
+            council_name="CRM",
+            council_number="123456",
+            specialty="Cardiology",
+            experience_years=5,
             consent_given=True
         )
         assert prof.status == 'PENDING'
@@ -23,20 +32,36 @@ class TestBusinessRules:
         """Rule 3: Validation - Required fields must be enforced"""
         serializer = ProfessionalSerializer(data={})
         assert not serializer.is_valid()
-        assert 'name' in serializer.errors
-        assert 'cpf' in serializer.errors
-        assert 'email' in serializer.errors
-        assert 'consent_given' in serializer.errors # Consent is required by logic if not enforced by model default
+        errors = serializer.errors
+        
+        required_fields = [
+            'name', 'cpf', 'email', 'birth_date', 'address', 
+            'education', 'institution', 'graduation_year', 
+            'council_name', 'council_number', 'specialty', 
+            'experience_years', 'consent_given'
+        ]
+        
+        for field in required_fields:
+            assert field in errors, f"Field {field} should be required"
 
     def test_block_registration_within_90_days(self):
         """Rule 2a: Block new registration within 90 days"""
         # Create a recent registration
         Professional.objects.create(
-            id=uuid.uuid4(), # Ensure unique ID
+            id=uuid.uuid4(),
             name="Recent User",
             cpf="11111111111", 
             email="recent@test.com",
             phone="11999999999",
+            birth_date=date(1990, 1, 1),
+            address="Rua Teste, 123",
+            education="Medicine",
+            institution="USP",
+            graduation_year=2015,
+            council_name="CRM",
+            council_number="123456",
+            specialty="Cardiology",
+            experience_years=5,
             consent_given=True,
             submission_date=timezone.now()
         )
@@ -47,6 +72,15 @@ class TestBusinessRules:
             "cpf": "11111111111",
             "email": "new@test.com",
             "phone": "11888888888",
+            "birth_date": "1990-01-01",
+            "address": "Rua Nova, 456",
+            "education": "Nursing",
+            "institution": "UNIFESP",
+            "graduation_year": 2018,
+            "council_name": "COREN",
+            "council_number": "654321",
+            "specialty": "ICU",
+            "experience_years": 3,
             "consent_given": True
         }
         serializer = ProfessionalSerializer(data=data)
@@ -58,21 +92,24 @@ class TestBusinessRules:
         # Create an old registration (91 days ago)
         old_date = timezone.now() - timedelta(days=91)
         
-        # We need to hack the creation because auto_now_add forces now() on create.
-        # So we create then update.
         prof = Professional.objects.create(
             id=uuid.uuid4(),
             name="Old User",
             cpf="22222222222",
             email="old@test.com",
             phone="11999999999",
+            birth_date=date(1990, 1, 1),
+            address="Rua Teste, 123",
+            education="Medicine",
+            institution="USP",
+            graduation_year=2015,
+            council_name="CRM",
+            council_number="123456",
+            specialty="Cardiology",
+            experience_years=5,
             consent_given=True
         )
-        # Manually update submission_date to the past
-        # Note: Update uses current time for auto_now fields usually, 
-        # but submission_date is auto_now_add, so it shouldn't change on update,
-        # but we need to force it.
-        # Direct update on queryset avoids save() signals if any, but safer here:
+        # Manually update submission_date
         Professional.objects.filter(id=prof.id).update(submission_date=old_date)
         
         # Try to register again with same CPF
@@ -81,6 +118,15 @@ class TestBusinessRules:
             "cpf": "22222222222",
             "email": "retry@test.com",
             "phone": "11777777777",
+            "birth_date": "1990-01-01",
+            "address": "Rua Nova, 456",
+            "education": "Medicine",
+            "institution": "USP",
+            "graduation_year": 2015,
+            "council_name": "CRM",
+            "council_number": "123456",
+            "specialty": "Cardiology",
+            "experience_years": 5,
             "consent_given": True
         }
         serializer = ProfessionalSerializer(data=data)
@@ -88,8 +134,6 @@ class TestBusinessRules:
         # Validation should pass
         assert serializer.is_valid(), f"Errors: {serializer.errors}"
         
-        # Save should pass (Create new record)
-        # This is where we expect failure if unique=True is set on CPF
         try:
             serializer.save()
         except Exception as e:
