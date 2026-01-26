@@ -133,7 +133,7 @@ class Professional(models.Model):
         ('Terapeuta Ocupacional', 'Terapeuta Ocupacional'),
     ]
 
-    education = models.CharField(max_length=255, choices=EDUCATION_CHOICES) # Formação Acadêmica
+    education = models.CharField(max_length=255) # Formação Acadêmica - Choices removed to allow custom input
     institution = models.CharField(max_length=255) # Instituição de Ensino
     graduation_year = models.IntegerField() # Ano de Conclusão
     council_name = models.CharField(max_length=50) # ex: CRM, COREN

@@ -33,7 +33,8 @@ const educationOptions = [
     'Técnico em Vigilância em Saúde', 'Tecnólogo em Análises Clínicas', 'Tecnólogo em Estética e Cosmética',
     'Tecnólogo em Oftálmica', 'Tecnólogo em Radiologia', 'Tecnólogo em Saúde Pública',
     'Tecnólogo em Sistemas Biomédicos', 'Terapeuta Cognitivo-Comportamental', 'Terapeuta Familiar',
-    'Terapeuta Holístico', 'Terapeuta Integrativo', 'Terapeuta Ocupacional'
+    'Terapeuta Holístico', 'Terapeuta Integrativo', 'Terapeuta Ocupacional',
+    'Outra (Digitar manualmente)'
 ];
 
 const schema = z.object({
@@ -56,6 +57,7 @@ const schema = z.object({
 
     // Professional Data
     education: z.string().nonempty("Selecione sua formação acadêmica"),
+    custom_education: z.string().optional(),
     institution: z.string().min(2, "Instituição é obrigatória"),
     graduation_year: z.string().regex(/^\d{4}$/, "Ano deve ter 4 dígitos").transform((val) => parseInt(val, 10)),
     council_name: z.string().nonempty("Conselho é obrigatório (ex: CRM, COREN)"),
@@ -64,6 +66,14 @@ const schema = z.object({
     experience_years: z.string().regex(/^\d+$/, "Apenas números").transform((val) => parseInt(val, 10)),
 
     consent_given: z.boolean().refine(val => val === true, "Você deve aceitar os termos da LGPD"),
+}).superRefine((data, ctx) => {
+    if (data.education === 'Outra (Digitar manualmente)' && !data.custom_education) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['custom_education'],
+            message: 'Digite sua formação'
+        });
+    }
 });
 
 type FormData = z.infer<typeof schema>;
@@ -76,6 +86,8 @@ export const Register: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [generalError, setGeneralError] = useState('');
     const navigate = useNavigate();
+
+    const selectedEducation = watch('education');
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
@@ -123,9 +135,15 @@ export const Register: React.FC = () => {
         setGeneralError('');
 
         try {
+            // Determine final education value
+            const finalEducation = data.education === 'Outra (Digitar manualmente)'
+                ? data.custom_education
+                : data.education;
+
             // 1. Create Professional
             const response = await api.post('/professionals/', {
                 ...data,
+                education: finalEducation,
                 consent_given: true
             });
 
@@ -291,6 +309,15 @@ export const Register: React.FC = () => {
                     </select>
                     {errors.education && <span className={styles.errorMessage}>{errors.education.message}</span>}
                 </div>
+
+                {selectedEducation === 'Outra (Digitar manualmente)' && (
+                    <Input
+                        label="Qual sua formação?"
+                        placeholder="Digite sua formação profissional"
+                        {...register('custom_education')}
+                        error={errors.custom_education?.message}
+                    />
+                )}
 
                 <div className={styles.row}>
                     <Input
