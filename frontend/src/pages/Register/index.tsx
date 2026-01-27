@@ -59,11 +59,11 @@ const schema = z.object({
     education: z.string().nonempty("Selecione sua formação acadêmica"),
     custom_education: z.string().optional(),
     institution: z.string().min(2, "Instituição é obrigatória"),
-    graduation_year: z.string().regex(/^\d{4}$/, "Ano deve ter 4 dígitos").transform((val) => parseInt(val, 10)),
+    graduation_year: z.string().regex(/^\d{4}$/, "Ano deve ter 4 dígitos"),
     council_name: z.string().nonempty("Conselho é obrigatório (ex: CRM, COREN)"),
     council_number: z.string().nonempty("Número do conselho é obrigatório"),
     area_of_action: z.string().optional(),
-    experience_years: z.string().regex(/^\d+$/, "Apenas números").transform((val) => parseInt(val, 10)),
+    experience_years: z.string().regex(/^\d+$/, "Apenas números"),
 
     consent_given: z.boolean().refine(val => val === true, "Você deve aceitar os termos da LGPD"),
 }).superRefine((data, ctx) => {
@@ -143,6 +143,8 @@ export const Register: React.FC = () => {
             // 1. Create Professional
             const response = await api.post('/professionals/', {
                 ...data,
+                graduation_year: parseInt(data.graduation_year.toString(), 10),
+                experience_years: parseInt(data.experience_years.toString(), 10),
                 education: finalEducation,
                 consent_given: true
             });

@@ -95,47 +95,48 @@ const ProfessionalsList: React.FC = () => {
                     <option value="NEEDS_ADJUSTMENT">Requer Ajustes</option>
                 </select>
             </div>
-        </div>
 
             {
-        loading ? (
-            <p>Carregando...</p>
-        ) : (
-            <table className={styles.table}>
-                <thead>
-                    <tr>
-                        <th>Nome</th>
-                        <th>Formação</th>
-                        <th>Data Envio</th>
-                        <th>Status</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {professionals.map((prof) => (
-                        <tr key={prof.id}>
-                            <td>{prof.name}</td>
-                            <td>{prof.education}</td>
-                            <td>{new Date(prof.submission_date).toLocaleDateString()}</td>
-                            <td>
-                                <span className={`${styles.statusBadge} ${styles[prof.status]}`}>
-                                    {prof.status}
-                                </span>
-                            </td>
-                            <td>
-                                <button
-                                    className={styles.actionButton}
-                                    onClick={() => navigate(`/admin/professionals/${prof.id}`)}
-                                >
-                                    Detalhes
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        )
-    }
+                loading ? (
+                    <div className={styles.loadingContainer}>
+                        <p>Carregando...</p>
+                    </div>
+                ) : (
+                    <table className={styles.table}>
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Formação</th>
+                                <th>Data Envio</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {professionals.map((prof) => (
+                                <tr key={prof.id}>
+                                    <td>{prof.name}</td>
+                                    <td>{prof.education}</td>
+                                    <td>{new Date(prof.submission_date).toLocaleDateString()}</td>
+                                    <td>
+                                        <span className={`${styles.statusBadge} ${styles[prof.status]}`}>
+                                            {prof.status}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button
+                                            className={styles.actionButton}
+                                            onClick={() => navigate(`/admin/professionals/${prof.id}`)}
+                                        >
+                                            Detalhes
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )
+            }
         </div >
     );
 };
