@@ -12,6 +12,8 @@ const COLORS = ['#0088FE', '#00C49F', '#FF8042', '#FFBB28'];
 interface DashboardMetrics {
     total_registrations: number;
     last_30_days: number;
+    last_60_days: number;
+    last_90_days: number;
     status_counts: { status: string; count: number }[];
     yearly_variation: { month: string; count: number }[];
     analyzed_this_month: number;
@@ -131,8 +133,20 @@ export const Dashboard: React.FC = () => {
                 </div>
                 <div className={styles.card}>
                     <h3>Recentes</h3>
-                    <p className={styles.bigNumber}>{metrics.last_30_days}</p>
-                    <span className={styles.label}>Últimos 30 dias</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
+                        <div style={{ textAlign: 'center' }}>
+                            <p className={styles.bigNumber} style={{ fontSize: '1.5rem' }}>{metrics.last_30_days}</p>
+                            <span className={styles.label} style={{ fontSize: '0.7rem' }}>30d</span>
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                            <p className={styles.bigNumber} style={{ fontSize: '1.5rem' }}>{metrics.last_60_days}</p>
+                            <span className={styles.label} style={{ fontSize: '0.7rem' }}>60d</span>
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                            <p className={styles.bigNumber} style={{ fontSize: '1.5rem' }}>{metrics.last_90_days}</p>
+                            <span className={styles.label} style={{ fontSize: '0.7rem' }}>90d</span>
+                        </div>
+                    </div>
                 </div>
                 <div className={styles.card}>
                     <h3>Eficiência</h3>

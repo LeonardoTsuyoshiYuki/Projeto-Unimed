@@ -160,8 +160,13 @@ class DashboardViewSet(viewsets.GenericViewSet):
         # 2. Status Counts
         status_counts = Professional.objects.values('status').annotate(count=Count('id'))
         
-        # 3. Last 30 Days Count
+        # 3. Recent Counts (30, 60, 90 days)
+        sixty_days_ago = now - timedelta(days=60)
+        ninety_days_ago = now - timedelta(days=90)
+        
         last_30_days = Professional.objects.filter(submission_date__gte=thirty_days_ago).count()
+        last_60_days = Professional.objects.filter(submission_date__gte=sixty_days_ago).count()
+        last_90_days = Professional.objects.filter(submission_date__gte=ninety_days_ago).count()
 
         # 4. Yearly Variation (Continuous Yearly)
         # We will get the last 12 months for the trend
@@ -201,6 +206,8 @@ class DashboardViewSet(viewsets.GenericViewSet):
         return Response({
             'total_registrations': total_count,
             'last_30_days': last_30_days,
+            'last_60_days': last_60_days,
+            'last_90_days': last_90_days,
             'status_counts': status_counts,
             'yearly_variation': monthly_volume,
             'analyzed_this_month': analyzed_this_month,
