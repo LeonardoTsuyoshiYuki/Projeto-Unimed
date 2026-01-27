@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../../services/api';
 import styles from './styles.module.css';
+import { FileText, Download, User, Briefcase, File, Image as ImageIcon, ClipboardList, History } from 'lucide-react';
 
 interface AuditLog {
     id: number;
@@ -16,6 +17,7 @@ interface Document {
     file: string;
     description: string;
     uploaded_at: string;
+    file_size?: number;
 }
 
 interface Professional {
@@ -82,6 +84,9 @@ const ProfessionalDetail: React.FC = () => {
         try {
             await api.patch(`/professionals/${professional.id}/`, { internal_notes: notes });
             alert("Observações salvas!");
+            // Refresh logs
+            const logsRes = await api.get(`/professionals/${id}/history/`);
+            setAuditLogs(logsRes.data);
         } catch (error) {
             console.error(error);
             alert("Erro ao salvar observações.");
@@ -92,151 +97,186 @@ const ProfessionalDetail: React.FC = () => {
 
     const handleStatusChange = async (newStatus: string) => {
         if (!professional) return;
-
-        const confirmMsg = `Tem certeza que deseja mudar o status para ${newStatus}?`;
-        if (!window.confirm(confirmMsg)) return;
+        if (!window.confirm(`Tem certeza que deseja mudar o status para ${newStatus}?`)) return;
 
         try {
             await api.patch(`/professionals/${professional.id}/`, { status: newStatus });
 
-            // Refresh data
+            // Refresh all data
             const [profRes, logsRes] = await Promise.all([
                 api.get(`/professionals/${id}/`),
                 api.get(`/professionals/${id}/history/`)
             ]);
             setProfessional(profRes.data);
             setAuditLogs(logsRes.data);
-            alert("Status atualizado com sucesso!");
         } catch (error) {
             console.error(error);
             alert("Erro ao atualizar status.");
         }
     };
 
-    if (loading) return <div>Carregando...</div>;
-    if (!professional) return <div>Profissional não encontrado.</div>;
+    const formatFileSize = (bytes?: number) => {
+        if (!bytes) return 'Tamanho desconhecido';
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
 
+    const getFileIcon = (filename: string) => {
+        const ext = filename.split('.').pop()?.toLowerCase();
+        if (ext === 'pdf') return <FileText size={24} />;
+        if (['jpg', 'jpeg', 'png'].includes(ext || '')) return <ImageIcon size={24} />;
+        return <File size={24} />;
+    };
+
+    if (loading) return <div className={styles.loading}>Carregando...</div>;
+    if (!professional) return <div className={styles.error}>Profissional não encontrado.</div>;
 
     return (
         <div className={styles.container}>
-            <div className={styles.detailHeader}>
-                <button onClick={() => navigate('/admin/professionals')} className={styles.actionButton}>
-                    &larr; Voltar
-                </button>
-                <h2>Detalhes: {professional.name}</h2>
-                <span className={`${styles.statusBadge} ${styles[professional.status]}`}>
-                    {professional.status}
-                </span>
-            </div>
+            {/* 1. Cabeçalho Fixo */}
+            <header className={styles.detailHeader}>
+                <div className={styles.headerInfo}>
+                    <h1>{professional.name}</h1>
+                    <div className={styles.headerMeta}>
+                        <span>CPF: {professional.cpf}</span>
+                        <span className={`${styles.statusBadge} ${styles[professional.status]}`}>
+                            {professional.status}
+                        </span>
+                        <span>Cadastrado em: {new Date(professional.submission_date).toLocaleDateString()}</span>
+                    </div>
+                </div>
+                <div className={styles.headerActions}>
+                    <button className={`${styles.actionBtn} ${styles.outlineBtn}`} onClick={() => navigate('/admin/professionals')}>
+                        Voltar
+                    </button>
+                    <button className={`${styles.actionBtn} ${styles.primaryBtn}`} onClick={() => handleStatusChange('APPROVED')}>
+                        Aprovar
+                    </button>
+                    <button className={`${styles.actionBtn} ${styles.dangerBtn}`} onClick={() => handleStatusChange('REJECTED')}>
+                        Reprovar
+                    </button>
+                    <button className={`${styles.actionBtn} ${styles.warningBtn}`} onClick={() => handleStatusChange('NEEDS_ADJUSTMENT')}>
+                        Ajustes
+                    </button>
+                </div>
+            </header>
 
-            <div className={styles.section}>
-                <h3>Dados Pessoais</h3>
+            {/* 2. Dados Pessoais */}
+            <section className={styles.card}>
+                <div className={styles.cardTitle}>
+                    <User size={20} />
+                    Dados Pessoais
+                </div>
                 <div className={styles.grid}>
+                    <div className={styles.field}><span className={styles.label}>Nome Completo</span><span className={styles.value}>{professional.name}</span></div>
                     <div className={styles.field}><span className={styles.label}>CPF</span><span className={styles.value}>{professional.cpf}</span></div>
-                    <div className={styles.field}><span className={styles.label}>Email</span><span className={styles.value}>{professional.email}</span></div>
+                    <div className={styles.field}><span className={styles.label}>Data de Nascimento</span><span className={styles.value}>{new Date(professional.birth_date).toLocaleDateString()}</span></div>
+                    <div className={styles.field}><span className={styles.label}>E-mail</span><span className={styles.value}>{professional.email}</span></div>
                     <div className={styles.field}><span className={styles.label}>Telefone</span><span className={styles.value}>{professional.phone}</span></div>
-                    <div className={styles.field}><span className={styles.label}>Nascimento</span><span className={styles.value}>{professional.birth_date}</span></div>
-                </div>
-            </div>
-
-            <div className={styles.section}>
-                <h3>Endereço</h3>
-                <div className={styles.grid}>
+                    <div className={styles.field}><span className={styles.label}>Localização</span><span className={styles.value}>{professional.city} / {professional.state}</span></div>
+                    <div className={styles.field}><span className={styles.label}>Endereço</span><span className={styles.value}>{professional.street}, {professional.number} - {professional.neighborhood}</span></div>
                     <div className={styles.field}><span className={styles.label}>CEP</span><span className={styles.value}>{professional.zip_code}</span></div>
-                    <div className={styles.field}><span className={styles.label}>Cidade/UF</span><span className={styles.value}>{professional.city}/{professional.state}</span></div>
-                    <div className={styles.field}><span className={styles.label}>Logradouro</span><span className={styles.value}>{professional.street}, {professional.number}</span></div>
-                    <div className={styles.field}><span className={styles.label}>Bairro</span><span className={styles.value}>{professional.neighborhood}</span></div>
                 </div>
-            </div>
+            </section>
 
-            <div className={styles.section}>
-                <h3>Dados Profissionais</h3>
+            {/* 3. Dados Profissionais */}
+            <section className={styles.card}>
+                <div className={styles.cardTitle}>
+                    <Briefcase size={20} />
+                    Dados Profissionais
+                </div>
                 <div className={styles.grid}>
                     <div className={styles.field}><span className={styles.label}>Formação</span><span className={styles.value}>{professional.education}</span></div>
                     <div className={styles.field}><span className={styles.label}>Instituição</span><span className={styles.value}>{professional.institution} ({professional.graduation_year})</span></div>
-                    <div className={styles.field}><span className={styles.label}>Conselho</span><span className={styles.value}>{professional.council_name}: {professional.council_number}</span></div>
-                    <div className={styles.field}><span className={styles.label}>Experiência</span><span className={styles.value}>{professional.experience_years} anos</span></div>
+                    <div className={styles.field}><span className={styles.label}>Conselho Profissional</span><span className={styles.value}>{professional.council_name}: {professional.council_number}</span></div>
+                    <div className={styles.field}><span className={styles.label}>Tempo de Experiência</span><span className={styles.value}>{professional.experience_years} anos</span></div>
+                    <div className={styles.field}><span className={styles.label}>Área de Atuação</span><span className={styles.value}>{professional.area_of_action || '-'}</span></div>
                 </div>
-            </div>
+            </section>
 
-            <div className={styles.section}>
-                <h3>Documentos Comprobatórios</h3>
-                <div className={styles.grid}>
-                    {(!professional.documents || professional.documents.length === 0) ? (
-                        <p>Nenhum documento enviado.</p>
-                    ) : (
-                        <ul className={styles.documentList}>
-                            {professional.documents.map((doc) => (
-                                <li key={doc.id} className={styles.documentItem}>
-                                    <div className={styles.docInfo}>
-                                        <span className={styles.docName}>
-                                            {doc.file.split('/').pop()}
-                                            <span style={{ fontSize: '0.8em', color: '#666', marginLeft: '8px' }}>
-                                                ({doc.file.split('.').pop()?.toUpperCase()})
-                                            </span>
-                                        </span>
-                                        <span style={{ display: 'block', fontSize: '0.85em', color: '#555' }}>{doc.description}</span>
-                                        <span className={styles.docDate}>Enviado em: {new Date(doc.uploaded_at).toLocaleString()}</span>
+            {/* 4. Documentos */}
+            <section className={styles.card}>
+                <div className={styles.cardTitle}>
+                    <FileText size={20} />
+                    Documentos Comprobatórios
+                </div>
+                {(!professional.documents || professional.documents.length === 0) ? (
+                    <p style={{ color: '#64748b', fontStyle: 'italic' }}>Nenhum documento anexado.</p>
+                ) : (
+                    <ul className={styles.documentList}>
+                        {professional.documents.map((doc) => (
+                            <li key={doc.id} className={styles.documentItem}>
+                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                    <div className={styles.docIcon}>
+                                        {getFileIcon(doc.file)}
                                     </div>
-                                    <button
-                                        className={styles.downloadBtn}
-                                        onClick={async () => {
-                                            try {
-                                                const response = await api.get(`/documents/${doc.id}/download/`, {
-                                                    responseType: 'blob'
-                                                });
-                                                const url = window.URL.createObjectURL(new Blob([response.data]));
-                                                const link = document.createElement('a');
-                                                link.href = url;
-                                                const filename = doc.file.split('/').pop() || 'documento';
-                                                link.setAttribute('download', filename);
-                                                document.body.appendChild(link);
-                                                link.click();
-                                                link.parentNode?.removeChild(link);
-                                            } catch (err) {
-                                                console.error(err);
-                                                alert('Erro ao baixar documento.');
-                                            }
-                                        }}
-                                    >
-                                        Baixar Arquivo
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                </div>
-            </div>
+                                    <div className={styles.docInfo}>
+                                        <span className={styles.docName}>{doc.file.split('/').pop()}</span>
+                                        <div className={styles.docMeta}>
+                                            <span>{formatFileSize(doc.file_size)}</span>
+                                            <span style={{ margin: '0 8px' }}>•</span>
+                                            <span>{doc.description}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button
+                                    className={styles.downloadBtn}
+                                    onClick={async () => {
+                                        try {
+                                            const response = await api.get(`/documents/${doc.id}/download/`, { responseType: 'blob' });
+                                            const url = window.URL.createObjectURL(new Blob([response.data]));
+                                            const link = document.createElement('a');
+                                            link.href = url;
+                                            link.setAttribute('download', doc.file.split('/').pop() || 'documento');
+                                            document.body.appendChild(link);
+                                            link.click();
+                                        } catch (err) {
+                                            alert('Erro ao baixar documento.');
+                                        }
+                                    }}
+                                >
+                                    <Download size={16} />
+                                    Download
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </section>
 
-            <div className={styles.section}>
-                <h3>Observações Internas (Admin)</h3>
+            {/* 5. Observações Internas */}
+            <section className={styles.card}>
+                <div className={styles.cardTitle}>
+                    <ClipboardList size={20} />
+                    Observações Internas (Admin)
+                </div>
                 <textarea
                     className={styles.notesArea}
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Registre aqui observações internas, decisões ou pendências..."
-                    rows={4}
+                    placeholder="Adicione notas internas sobre este profissional..."
+                    rows={6}
                 />
-                <button
-                    className={styles.saveNotesBtn}
-                    onClick={handleSaveNotes}
-                    disabled={savingNotes}
-                >
-                    {savingNotes ? 'Salvando...' : 'Salvar Observações'}
-                </button>
-            </div>
-
-            <div className={styles.section}>
-                <h3>Ações Administrativas</h3>
-                <div className={styles.actionPanel}>
-                    <button className={styles.approveBtn} onClick={() => handleStatusChange('APPROVED')}>Aprovar</button>
-                    <button className={styles.rejectBtn} onClick={() => handleStatusChange('REJECTED')}>Rejeitar</button>
-                    <button className={styles.adjustmentBtn} onClick={() => handleStatusChange('NEEDS_ADJUSTMENT')}>Solicitar Ajustes</button>
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <button
+                        className={`${styles.actionBtn} ${styles.primaryBtn}`}
+                        onClick={handleSaveNotes}
+                        disabled={savingNotes}
+                    >
+                        {savingNotes ? 'Salvando...' : 'Salvar Observações'}
+                    </button>
                 </div>
-            </div>
+            </section>
 
-            <div className={styles.section}>
-                <h3>Histórico de Alterações</h3>
+            {/* 6. Histórico / Auditoria */}
+            <section className={styles.card}>
+                <div className={styles.cardTitle}>
+                    <History size={20} />
+                    Histórico de Alterações
+                </div>
                 <ul className={styles.auditLog}>
                     {auditLogs.map((log) => (
                         <li key={log.id} className={styles.auditItem}>
@@ -248,10 +288,10 @@ const ProfessionalDetail: React.FC = () => {
                             <div className={styles.auditDetails}>{log.details}</div>
                         </li>
                     ))}
-                    {auditLogs.length === 0 && <p>Nenhum histórico encontrado.</p>}
+                    {auditLogs.length === 0 && <p style={{ color: '#94a3b8' }}>Nenhum registro de histórico.</p>}
                 </ul>
-            </div>
-        </div >
+            </section>
+        </div>
     );
 };
 

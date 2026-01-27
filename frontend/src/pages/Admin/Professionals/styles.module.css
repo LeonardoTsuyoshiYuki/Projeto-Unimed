@@ -1,206 +1,243 @@
+/* Professional Detail - Hospital System Theme */
+
 .container {
-    padding: 20px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: #1e293b;
+    background-color: #f8fafc;
+    /* Lighter background */
+    min-height: 100vh;
 }
 
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.filters {
-    display: flex;
-    gap: 10px;
-}
-
-.searchInput,
-.selectInput {
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-.table {
-    width: 100%;
-    border-collapse: collapse;
-    background-color: white;
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.table th,
-.table td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-}
-
-.table th {
-    background-color: #00995D;
-    /* Unimed Green */
-    color: white;
-    font-weight: 600;
-}
-
-.table tr:hover {
-    background-color: #f1f1f1;
-}
-
-.statusBadge {
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 0.85em;
-    font-weight: 500;
-}
-
-.PENDING {
-    background-color: #fff3cd;
-    color: #856404;
-}
-
-.APPROVED {
-    background-color: #d4edda;
-    color: #155724;
-}
-
-.REJECTED {
-    background-color: #f8d7da;
-    color: #721c24;
-}
-
-.NEEDS_ADJUSTMENT {
-    background-color: #cce5ff;
-    color: #004085;
-}
-
-.actionButton {
-    background-color: #00995D;
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9em;
-}
-
-.actionButton:hover {
-    background-color: #007f4d;
-}
-
-/* Detail View Styles */
+/* Header Section */
 .detailHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.section {
-    background: white;
-    padding: 20px;
-    margin-bottom: 20px;
+    background-color: #ffffff;
+    padding: 1.5rem;
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #e2e8f0;
 }
 
+.headerInfo h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    color: #0f172a;
+}
+
+.headerMeta {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    font-size: 0.9rem;
+    color: #64748b;
+}
+
+.headerActions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+/* Cards */
+.card {
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #e2e8f0;
+}
+
+.cardTitle {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Grid Layouts */
 .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
 }
 
 .field {
-    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
 }
 
 .label {
-    display: block;
-    font-size: 0.85em;
-    color: #666;
-    margin-bottom: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
 }
 
 .value {
+    font-size: 1rem;
+    color: #0f172a;
     font-weight: 500;
-    font-size: 1.05em;
 }
 
-.actionPanel {
+/* Status Badges */
+.statusBadge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.PENDING {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+.APPROVED {
+    background-color: #dcfce7;
+    color: #16a34a;
+}
+
+.REJECTED {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+.NEEDS_ADJUSTMENT {
+    background-color: #e0f2fe;
+    color: #0284c7;
+}
+
+/* Documents */
+.documentList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
     display: flex;
-    gap: 10px;
-    margin-top: 20px;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
-.approveBtn {
-    background-color: #28a745;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+.documentItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    transition: all 0.2s;
 }
 
-.rejectBtn {
-    background-color: #dc3545;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+.documentItem:hover {
+    background-color: #f1f5f9;
+    border-color: #cbd5e1;
 }
 
-.adjustmentBtn {
-    background-color: #ffc107;
-    color: black;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
+.docIcon {
+    margin-right: 1rem;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+}
+
+.docInfo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.docName {
+    font-weight: 500;
+    color: #334155;
+    font-size: 0.95rem;
+}
+
+.docMeta {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.downloadBtn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: white;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    color: #475569;
+    font-size: 0.85rem;
+    font-weight: 500;
     cursor: pointer;
+    transition: all 0.2s;
+}
+
+.downloadBtn:hover {
+    background-color: #f8fafc;
+    border-color: #94a3b8;
+    color: #0f172a;
+}
+
+/* Internal Notes */
+.notesArea {
+    width: 100%;
+    padding: 1rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    resize: vertical;
+    margin-bottom: 1rem;
+    background-color: #fff9db;
+    /* Slight yellow tint for notes */
 }
 
 /* Audit Log */
 .auditLog {
     list-style: none;
     padding: 0;
+    max-height: 300px;
+    overflow-y: auto;
 }
 
 .auditItem {
-    border-bottom: 1px solid #eee;
-    padding: 10px 0;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.9rem;
 }
 
 .auditHeader {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 5px;
+    margin-bottom: 0.25rem;
 }
 
 .auditUser {
     font-weight: 600;
+    color: #475569;
 }
 
 .auditDate {
-    font-size: 0.85em;
-    color: #888;
+    color: #94a3b8;
+    font-size: 0.8rem;
 }
 
 .auditAction {
-    font-weight: 500;
-    color: #00995d;
-}
-
-.exportBtn {
-    background-color: #28a745;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9rem;
     display: flex;
     align-items: center;
     gap: 8px;

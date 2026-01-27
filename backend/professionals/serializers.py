@@ -3,11 +3,18 @@ from django.utils import timezone
 from datetime import timedelta
 from .models import Professional, Document
 
-class DocumentSerializer(serializers.ModelSerializer):
+    file_size = serializers.SerializerMethodField()
+    
     class Meta:
         model = Document
-        fields = ['id', 'professional', 'file', 'description', 'uploaded_at']
-        read_only_fields = ['id', 'uploaded_at']
+        fields = ['id', 'professional', 'file', 'description', 'uploaded_at', 'file_size']
+        read_only_fields = ['id', 'uploaded_at', 'file_size']
+
+    def get_file_size(self, obj):
+        try:
+            return obj.file.size
+        except Exception:
+            return 0
 
 class ProfessionalSerializer(serializers.ModelSerializer):
     documents = DocumentSerializer(many=True, read_only=True)
