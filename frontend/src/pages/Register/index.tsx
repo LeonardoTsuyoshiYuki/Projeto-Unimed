@@ -34,7 +34,7 @@ const educationOptions = [
     'Tecnólogo em Oftálmica', 'Tecnólogo em Radiologia', 'Tecnólogo em Saúde Pública',
     'Tecnólogo em Sistemas Biomédicos', 'Terapeuta Cognitivo-Comportamental', 'Terapeuta Familiar',
     'Terapeuta Holístico', 'Terapeuta Integrativo', 'Terapeuta Ocupacional',
-    'Outra (Digitar manualmente)'
+    'Outros'
 ];
 
 const schema = z.object({
@@ -67,7 +67,7 @@ const schema = z.object({
 
     consent_given: z.boolean().refine(val => val === true, "Você deve aceitar os termos da LGPD"),
 }).superRefine((data, ctx) => {
-    if (data.education === 'Outra (Digitar manualmente)' && !data.custom_education) {
+    if (data.education === 'Outros' && !data.custom_education) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
             path: ['custom_education'],
@@ -136,7 +136,7 @@ export const Register: React.FC = () => {
 
         try {
             // Determine final education value
-            const finalEducation = data.education === 'Outra (Digitar manualmente)'
+            const finalEducation = data.education === 'Outros'
                 ? data.custom_education
                 : data.education;
 
@@ -310,7 +310,7 @@ export const Register: React.FC = () => {
                     {errors.education && <span className={styles.errorMessage}>{errors.education.message}</span>}
                 </div>
 
-                {selectedEducation === 'Outra (Digitar manualmente)' && (
+                {selectedEducation === 'Outros' && (
                     <Input
                         label="Qual sua formação?"
                         placeholder="Digite sua formação profissional"

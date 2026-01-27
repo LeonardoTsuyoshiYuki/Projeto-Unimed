@@ -1,8 +1,12 @@
-from rest_framework import viewsets, permissions, status, parsers
+from rest_framework import viewsets, permissions, parsers, filters, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from django_filters.rest_framework import DjangoFilterBackend
 from django.core.mail import send_mail
 from django.utils import timezone
+from datetime import timedelta
+from django.db.models import Count, Avg, F
+from django.db.models.functions import TruncMonth
 from .models import Professional, Document
 from .serializers import ProfessionalSerializer, DocumentSerializer, ProfessionalManagementSerializer
 from audit.models import AuditLog
@@ -14,6 +18,12 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
     queryset = Professional.objects.all()
     serializer_class = ProfessionalSerializer
     permission_classes = [permissions.AllowAny] # Open for registration, restricted for listing?
+    
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['status', 'education']
+    search_fields = ['name', 'cpf', 'email']
+    ordering_fields = ['submission_date', 'name']
+    ordering = ['-submission_date']
     
     def get_permissions(self):
         if self.action in ['create']:
@@ -98,21 +108,44 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
                     details=f"Status changed to {instance.status}"
                 )
             
+            # Log Internal Notes changes
+            if instance.internal_notes != old_instance.internal_notes:
+                AuditLog.objects.create(
+                    user=self.request.user,
+                    action='UPDATE',
+                    target_model='Professional',
+                    target_id=str(instance.id),
+                    details="Internal notes updated"
+                )
+
             # Send email on status change
-            send_mail(
-                f'Atualização de Status - Unimed: {instance.get_status_display()}',
-                f'Olá {instance.name}, o status do seu cadastro mudou para: {instance.get_status_display()}.',
-                'no-reply@unimed.com',
-                [instance.email],
-                fail_silently=True,
-            )
+            if instance.status != old_status:
+                send_mail(
+                    f'Atualização de Status - Unimed: {instance.get_status_display()}',
+                    f'Olá {instance.name}, o status do seu cadastro mudou para: {instance.get_status_display()}.',
+                    'no-reply@unimed.com',
+                    [instance.email],
+                    fail_silently=True,
+                )
 
 
-from django.db.models import Count, Avg, F
-from django.db.models.functions import TruncMonth
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework import viewsets, permissions
+
+
+
+    @action(detail=True, methods=['get'], permission_classes=[permissions.IsAdminUser])
+    def history(self, request, pk=None):
+        professional = self.get_object()
+        from audit.models import AuditLog
+        from audit.serializers import AuditLogSerializer
+        
+        logs = AuditLog.objects.filter(
+            target_model='Professional',
+            target_id=str(professional.id)
+        ).order_by('-timestamp')
+        
+        serializer = AuditLogSerializer(logs, many=True)
+        return Response(serializer.data)
+
 
 class DashboardViewSet(viewsets.GenericViewSet):
     permission_classes = [permissions.IsAdminUser]
@@ -141,26 +174,57 @@ class DashboardViewSet(viewsets.GenericViewSet):
             count=Count('id')
         ).order_by('month')
 
+        # 5. Efficiency (Analyzed this month)
+        # Count unique professionals whose status changed or was updated restricted to admin actions
+        from audit.models import AuditLog
+        analyzed_this_month = AuditLog.objects.filter(
+            timestamp__year=now.year,
+            timestamp__month=now.month,
+            action__in=['STATUS_CHANGE', 'UPDATE']
+        ).values('target_id').distinct().count()
+
+        # 6. Average Analysis Time (for those finalized)
+        # We calculate diff between submission and approval/rejection
+        from django.db.models.functions import Coalesce
+        
+        avg_time_data = Professional.objects.filter(
+            status__in=['APPROVED', 'REJECTED']
+        ).annotate(
+            end_date=Coalesce('approved_at', 'rejected_at')
+        ).aggregate(
+            avg_time=Avg(F('end_date') - F('submission_date'))
+        )
+        
+        avg_time_seconds = avg_time_data['avg_time'].total_seconds() if avg_time_data['avg_time'] else 0
+        avg_time_days = round(avg_time_seconds / 86400, 1)
+
         return Response({
             'total_registrations': total_count,
             'last_30_days': last_30_days,
             'status_counts': status_counts,
             'yearly_variation': monthly_volume,
+            'analyzed_this_month': analyzed_this_month,
+            'avg_analysis_time_days': avg_time_days,
         })
 
 class DocumentViewSet(viewsets.ModelViewSet):
     queryset = Document.objects.all()
     serializer_class = DocumentSerializer
     parser_classes = [parsers.MultiPartParser, parsers.FormParser]
-    permission_classes = [permissions.AllowAny] # Should be restricted in prod logic to the owner during session or admin
+    permission_classes = [permissions.IsAdminUser] # Default to Admin only
 
-    def perform_create(self, serializer):
-        # Ideally, we should link to the professional here.
-        # Check passed professional_id
-        professional_id = self.request.data.get('professional_id')
-        if professional_id:
-            professional = Professional.objects.get(id=professional_id)
-            serializer.save(professional=professional)
-        else:
-             # Handle error or temporary storage
-             pass
+    def get_permissions(self):
+        if self.action == 'create':
+            return [permissions.AllowAny()] # Allow anon upload during registration
+        return [permissions.IsAdminUser()]
+
+    @action(detail=True, methods=['get'], permission_classes=[permissions.IsAdminUser])
+    def download(self, request, pk=None):
+        document = self.get_object()
+        if not document.file:
+            return Response({"error": "File not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        from django.http import FileResponse
+        response = FileResponse(document.file.open('rb'))
+        response['Content-Disposition'] = f'attachment; filename="{document.file.name.split("/")[-1]}"'
+        return response

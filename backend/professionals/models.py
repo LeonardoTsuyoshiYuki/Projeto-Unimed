@@ -6,7 +6,19 @@ from datetime import timedelta, date
 from django.utils import timezone
 
 def document_upload_path(instance, filename):
-    return f'documents/{instance.professional.cpf}/{filename}'
+    cpf = 'unknown'
+    try:
+        cpf = instance.professional.cpf
+    except Exception:
+        if hasattr(instance, 'professional_id') and instance.professional_id:
+            # Lazy import to avoid circular dependency/definition issues
+            from .models import Professional
+            try:
+                prof = Professional.objects.get(id=instance.professional_id)
+                cpf = prof.cpf
+            except Professional.DoesNotExist:
+                pass
+    return f'documents/{cpf}/{filename}'
 
 def validate_file_size(value):
     limit = 5 * 1024 * 1024 # 5 MB
@@ -155,6 +167,9 @@ class Professional(models.Model):
     approved_at = models.DateTimeField(null=True, blank=True)
     rejected_by = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='rejected_professionals')
     rejected_at = models.DateTimeField(null=True, blank=True)
+    
+    # Internal Notes (Admin only)
+    internal_notes = models.TextField(blank=True, null=True)
     
     class Meta:
         ordering = ['-submission_date']

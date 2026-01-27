@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:15-alpine
@@ -11,10 +9,15 @@ services:
       - POSTGRES_USER=unimed_user
       - POSTGRES_PASSWORD=unimed_pass
     ports:
-      - "5432:5432"
+      - "5433:5432" # Changed host port to 5433 to avoid conflict
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U unimed_user -d unimed_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   backend:
-    build: 
+    build:
       context: ./backend
       dockerfile: Dockerfile
     command: python manage.py runserver 0.0.0.0:8000
@@ -23,9 +26,14 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       - DATABASE_URL=postgres://unimed_user:unimed_pass@db:5432/unimed_db
+      - POSTGRES_DB=unimed_db
+      - POSTGRES_USER=unimed_user
+      - POSTGRES_PASSWORD=unimed_pass
+      - POSTGRES_HOST=db
       - DEBUG=1
       - SECRET_KEY=dev_secret_key_change_in_prod
 
@@ -37,9 +45,11 @@ services:
       - ./frontend:/app
       - /app/node_modules
     ports:
-      - "3000:5173"
+      - "3000:5173" # Vite default port is 5173, mapping to 3000
     environment:
       - VITE_API_URL=http://localhost:8000/api
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:

@@ -1,12 +1,13 @@
 from rest_framework import serializers
-from .models import Professional, Document
 from django.utils import timezone
 from datetime import timedelta
+from .models import Professional, Document
 
 class DocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Document
-        fields = ['id', 'file', 'description', 'uploaded_at']
+        fields = ['id', 'professional', 'file', 'description', 'uploaded_at']
+        read_only_fields = ['id', 'uploaded_at']
 
 class ProfessionalSerializer(serializers.ModelSerializer):
     documents = DocumentSerializer(many=True, read_only=True)
@@ -56,3 +57,4 @@ class ProfessionalManagementSerializer(ProfessionalSerializer):
     class Meta(ProfessionalSerializer.Meta):
         # Remove 'status' from read_only_fields to allow Admin updates
         read_only_fields = ['submission_date', 'consent_date']
+        fields = ProfessionalSerializer.Meta.fields + ['internal_notes']

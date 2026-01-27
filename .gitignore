@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Backend specific
+backend/venv/
+*.sqlite3
+backend/staticfiles/
+backend/media/
+
+# Frontend specific
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local

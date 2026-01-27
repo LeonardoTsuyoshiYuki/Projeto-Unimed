@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'drf_spectacular', # Added drf_spectacular
     'corsheaders',
+    'django_filters',
 
     # Local apps
     'core',
@@ -69,7 +70,7 @@ DATABASES = {
         'NAME': os.environ.get('POSTGRES_DB', 'unimed_db'),
         'USER': os.environ.get('POSTGRES_USER', 'unimed_user'),
         'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'unimed_pass'),
-        'HOST': os.environ.get('POSTGRES_HOST', 'db'), # 'db' is the docker service name
+        'HOST': os.environ.get('POSTGRES_HOST', 'db'), 
         'PORT': os.environ.get('POSTGRES_PORT', '5432'),
     }
 }
@@ -97,7 +98,9 @@ USE_I18N = True
 
 USE_TZ = True
 
-STATIC_URL = 'static/'
+STATIC_URL = "/static/"
+DEBUG = True 
+
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = 'media/'
@@ -146,6 +149,7 @@ SIMPLE_JWT = {
 # CORS Config
 CORS_ALLOW_ALL_ORIGINS = True # For dev convenience. In prod, list domains.
 
+
 # Email (SMTP)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
@@ -154,6 +158,33 @@ EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'False') == 'True'
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = 'no-reply@unimed.com'
+
+# Security Hardening
+if not DEBUG:
+    # SSL/HTTPS
+    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    
+    # HSTS
+    SECURE_HSTS_SECONDS = 31536000  # 1 Year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    
+    # Cookies
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    
+    # Headers
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY' # Protect against clickjacking
+else:
+    # Dev settings
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+
+# Rate Limiting (DRF Throttling is already configured in REST_FRAMEWORK settings)
 
 # Logging
 LOGGING = {

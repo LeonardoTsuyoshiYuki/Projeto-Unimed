@@ -5,16 +5,19 @@ import { Button } from '../../components/ui/Button';
 import styles from './styles.module.css';
 import api from '../../services/api';
 
+import { useAuth } from '../../contexts/AuthContext';
+
 export const Login: React.FC = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             const response = await api.post('/token/', { username, password });
-            localStorage.setItem('token', response.data.access);
+            login(response.data.access);
             navigate('/admin/dashboard');
         } catch (err) {
             alert('Credenciais inválidas');

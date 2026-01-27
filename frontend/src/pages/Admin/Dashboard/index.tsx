@@ -14,6 +14,8 @@ interface DashboardMetrics {
     last_30_days: number;
     status_counts: { status: string; count: number }[];
     yearly_variation: { month: string; count: number }[];
+    analyzed_this_month: number;
+    avg_analysis_time_days: number;
 }
 
 interface Professional {
@@ -131,6 +133,16 @@ export const Dashboard: React.FC = () => {
                     <h3>Recentes</h3>
                     <p className={styles.bigNumber}>{metrics.last_30_days}</p>
                     <span className={styles.label}>Últimos 30 dias</span>
+                </div>
+                <div className={styles.card}>
+                    <h3>Eficiência</h3>
+                    <p className={`${styles.bigNumber} ${styles.info}`}>{metrics.analyzed_this_month}</p>
+                    <span className={styles.label}>Análises no Mês</span>
+                </div>
+                <div className={styles.card}>
+                    <h3>Tempo Médio</h3>
+                    <p className={styles.bigNumber}>{metrics.avg_analysis_time_days} <span style={{ fontSize: '0.5em' }}>dias</span></p>
+                    <span className={styles.label}>Cadastro → Decisão</span>
                 </div>
             </div>
 
