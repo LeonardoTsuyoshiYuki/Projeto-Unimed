@@ -169,7 +169,13 @@ const ProfessionalDetail: React.FC = () => {
                             {professional.documents.map((doc) => (
                                 <li key={doc.id} className={styles.documentItem}>
                                     <div className={styles.docInfo}>
-                                        <span className={styles.docName}>Documento {doc.description || 'Anexo'}</span>
+                                        <span className={styles.docName}>
+                                            {doc.file.split('/').pop()}
+                                            <span style={{ fontSize: '0.8em', color: '#666', marginLeft: '8px' }}>
+                                                ({doc.file.split('.').pop()?.toUpperCase()})
+                                            </span>
+                                        </span>
+                                        <span style={{ display: 'block', fontSize: '0.85em', color: '#555' }}>{doc.description}</span>
                                         <span className={styles.docDate}>Enviado em: {new Date(doc.uploaded_at).toLocaleString()}</span>
                                     </div>
                                     <button

@@ -146,6 +146,59 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
         serializer = AuditLogSerializer(logs, many=True)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAdminUser])
+    def export_excel(self, request):
+        import openpyxl
+        from django.http import HttpResponse
+
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        response['Content-Disposition'] = 'attachment; filename=profissionais_unimed.xlsx'
+
+        workbook = openpyxl.Workbook()
+        worksheet = workbook.active
+        worksheet.title = 'Profissionais'
+
+        columns = [
+            'Nome', 'CPF', 'Email', 'Telefone', 'Data Nascimento',
+            'Formação', 'Instituição', 'Ano Formação',
+            'Conselho', 'Nº Conselho', 'Área Atuação', 'Experiência (anos)',
+            'Status', 'Data Envio', 'Data Aprovação/Reprovação', 'Responsável Análise'
+        ]
+
+        worksheet.append(columns)
+
+        queryset = self.filter_queryset(self.get_queryset())
+
+        for prof in queryset:
+            approval_date = prof.approved_at or prof.rejected_at
+            reviewer = prof.approved_by or prof.rejected_by
+            reviewer_name = reviewer.username if reviewer else '-'
+            
+            row = [
+                prof.name,
+                prof.cpf,
+                prof.email,
+                prof.phone,
+                prof.birth_date,
+                prof.education,
+                prof.institution,
+                prof.graduation_year,
+                prof.council_name,
+                prof.council_number,
+                prof.area_of_action,
+                prof.experience_years,
+                prof.get_status_display(),
+                prof.submission_date.strftime('%d/%m/%Y %H:%M') if prof.submission_date else '-',
+                approval_date.strftime('%d/%m/%Y %H:%M') if approval_date else '-',
+                reviewer_name
+            ]
+            worksheet.append(row)
+
+        workbook.save(response)
+        return response
+
 
 class DashboardViewSet(viewsets.GenericViewSet):
     permission_classes = [permissions.IsAdminUser]
