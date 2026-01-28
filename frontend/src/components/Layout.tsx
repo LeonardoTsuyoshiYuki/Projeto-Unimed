@@ -1,8 +1,11 @@
 import React from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import styles from './Layout.module.css';
+import { useTheme } from '../contexts/ThemeContext';
+import { Moon, Sun } from 'lucide-react';
 
 export const Layout: React.FC = () => {
+    const { theme, toggleTheme } = useTheme();
     return (
         <div className={styles.layout}>
             <header className={styles.header}>
@@ -15,6 +18,20 @@ export const Layout: React.FC = () => {
                         <Link to="/">Início</Link>
                         <Link to="/register">Quero me Credenciar</Link>
                         <Link to="/admin">Área Administrativa</Link>
+                        <button
+                            onClick={toggleTheme}
+                            style={{
+                                background: 'transparent',
+                                border: 'none',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                color: 'var(--text-secondary)'
+                            }}
+                            title={theme === 'light' ? 'Modo Escuro' : 'Modo Claro'}
+                        >
+                            {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+                        </button>
                     </nav>
                 </div>
             </header>
