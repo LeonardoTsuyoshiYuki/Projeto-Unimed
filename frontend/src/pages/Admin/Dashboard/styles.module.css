@@ -2,8 +2,245 @@
     padding: 2rem;
     max-width: 1400px;
     margin: 0 auto;
-    background-color: var(--color-background);
+    background-color: var(--bg-primary);
     min-height: 100vh;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.header h1 {
+    font-size: 1.5rem;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.header p {
+    color: var(--text-secondary);
+    margin: 0.25rem 0 0;
+}
+
+/* Loading & Error States */
+.loadingContainer,
+.errorContainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 60vh;
+    gap: 1rem;
+    color: var(--text-secondary);
+}
+
+.errorContainer h3 {
+    color: var(--error-color);
+    margin: 0;
+}
+
+/* Grid Layout */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.card {
+    background: var(--bg-secondary);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    display: flex;
+    border: 1px solid var(--border-color);
+    flex-direction: column;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    border-color: var(--text-tertiary);
+}
+
+.card h3 {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.bigNumber {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
+}
+
+.warning {
+    color: var(--warning-color);
+}
+
+.success {
+    color: var(--success-color);
+}
+
+.error {
+    color: var(--error-color);
+}
+
+.info {
+    color: var(--info-color);
+}
+
+.label {
+    font-size: 0.8rem;
+    color: var(--text-tertiary);
+    margin-top: auto;
+    padding-top: 0.5rem;
+}
+
+/* Charts */
+.chartsRow {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.chartContainer {
+    background: var(--bg-secondary);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    min-height: 380px;
+}
+
+.chartContainer h4 {
+    margin: 0 0 1.5rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.emptyChart {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--text-secondary);
+    background: var(--bg-primary);
+    border-radius: 8px;
+    border: 1px dashed var(--border-color);
+}
+
+/* Table */
+.tableSection {
+    background: var(--bg-secondary);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color);
+}
+
+.tableSection h4 {
+    margin: 0 0 1rem;
+    color: var(--text-primary);
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
+.table th {
+    font-weight: 600;
+    color: var(--text-secondary);
+    background-color: var(--bg-primary);
+}
+
+.table tr:last-child td {
+    border-bottom: none;
+}
+
+.emptyState {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* Status Badges */
+.status {
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.pending {
+    background-color: var(--warning-bg);
+    color: var(--warning-color);
+}
+
+.approved {
+    background-color: var(--success-bg);
+    color: var(--success-color);
+}
+
+.rejected {
+    background-color: var(--error-bg);
+    color: var(--error-color);
+}
+
+.adjustment_requested {
+    background-color: var(--info-bg);
+    color: var(--info-color);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .chartsRow {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .dashboard {
+        padding: 1rem;
+    }
+
+    .grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .tableSection {
+        overflow-x: auto;
+    }
 }
 
 .header {
