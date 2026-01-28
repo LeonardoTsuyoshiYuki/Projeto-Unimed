@@ -22,34 +22,43 @@
 .primary {
     background-color: var(--primary-color);
     color: white;
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 2px 4px rgba(0, 153, 93, 0.2);
 }
 
 .primary:hover:not(:disabled) {
     background-color: var(--primary-hover);
     transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 153, 93, 0.3);
+}
+
+.primary:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 153, 93, 0.2);
 }
 
 .secondary {
-    background-color: var(--bg-tertiary);
+    background-color: white;
     color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
 }
 
 .secondary:hover:not(:disabled) {
-    opacity: 0.9;
-    background-color: var(--text-tertiary);
+    background-color: var(--bg-tertiary);
+    border-color: var(--text-secondary);
+    color: var(--text-primary);
 }
 
 .outline {
     background-color: transparent;
-    border-color: var(--border-color);
-    color: var(--text-secondary);
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
 }
 
 .outline:hover:not(:disabled) {
-    background-color: var(--bg-tertiary);
-    color: var(--text-primary);
-    border-color: var(--text-secondary);
+    background-color: var(--primary-light);
+    border-color: var(--primary-hover);
+    color: var(--primary-hover);
 }
 
 .ghost {

@@ -1,10 +1,10 @@
 import React from 'react';
 import { Outlet, Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import styles from './styles.module.css';
 import { Button } from '../../components/ui/Button';
-import { useTheme } from '../../contexts/ThemeContext';
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, LogOut } from 'lucide-react';
 
 export const AdminLayout: React.FC = () => {
     const { isAuthenticated, loading, logout } = useAuth();
@@ -27,15 +27,14 @@ export const AdminLayout: React.FC = () => {
                     <Link to="/admin/professionals" className={styles.navLink}>Profissionais</Link>
                 </nav>
                 <div className={styles.logout}>
-                    <button
-                        onClick={toggleTheme}
-                        className={styles.themeToggle}
-                        title={`Mudar para tema ${theme === 'dark' ? 'claro' : 'escuro'}`}
-                    >
-                        {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-                        {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
-                    </button>
-                    <Button onClick={logout} variant="outline" style={{ width: '100%' }}>Sair</Button>
+                    <Button onClick={toggleTheme} variant="ghost" style={{ width: '100%', marginBottom: '1rem', justifyContent: 'flex-start' }}>
+                        {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+                        <span style={{ marginLeft: '10px' }}>{theme === 'light' ? 'Modo Escuro' : 'Modo Claro'}</span>
+                    </Button>
+                    <Button onClick={logout} variant="outline" style={{ width: '100%', justifyContent: 'flex-start' }}>
+                        <LogOut size={18} />
+                        <span style={{ marginLeft: '10px' }}>Sair</span>
+                    </Button>
                 </div>
             </aside>
             <main className={styles.content}>

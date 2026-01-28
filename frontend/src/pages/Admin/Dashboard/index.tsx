@@ -7,9 +7,9 @@ import { Spinner } from '../../../components/ui/Spinner';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 import api from '../../../services/api';
 
-import { useTheme } from '../../../contexts/ThemeContext';
 
-const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'];
+
+const COLORS = ['#00995d', '#3b82f6', '#f59e0b', '#ef4444'];
 
 interface DashboardMetrics {
     total_registrations: number;
@@ -36,7 +36,6 @@ export const Dashboard: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
-    const { theme } = useTheme();
 
     const fetchData = async () => {
         setLoading(true);
@@ -97,16 +96,6 @@ export const Dashboard: React.FC = () => {
     const adjustment = metrics.status_counts.find(s => s.status === 'ADJUSTMENT_REQUESTED')?.count || 0;
     const pending = metrics.status_counts.find(s => s.status === 'PENDING')?.count || 0;
 
-    const isDark = theme === 'dark';
-    const axisColor = isDark ? '#a1a1aa' : '#64748b'; // Updated for new dark text
-    const gridColor = isDark ? '#2d2d2d' : '#e2e8f0'; // Updated for new dark border
-    const tooltipStyle = {
-        backgroundColor: isDark ? '#1e1e1e' : '#ffffff', // Updated for new dark card
-        border: `1px solid ${isDark ? '#2d2d2d' : '#e2e8f0'}`,
-        color: isDark ? '#fff' : '#000',
-        borderRadius: '8px',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-    };
 
     return (
         <div className={styles.dashboard}>
@@ -182,17 +171,13 @@ export const Dashboard: React.FC = () => {
                         <div style={{ width: '100%', height: 300 }}>
                             <ResponsiveContainer>
                                 <AreaChart data={areaData}>
-                                    <defs>
-                                        <linearGradient id="colorReg" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
-                                            <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                                        </linearGradient>
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
-                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: axisColor }} />
-                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: axisColor }} />
-                                    <Tooltip contentStyle={tooltipStyle} />
-                                    <Area type="monotone" dataKey="registrations" stroke="#10b981" fillOpacity={1} fill="url(#colorReg)" />
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e0e0e0" />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#666' }} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#666' }} />
+                                    <Tooltip
+                                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                                    />
+                                    <Area type="monotone" dataKey="registrations" stroke="#00995d" fill="#00995d" fillOpacity={0.1} />
                                 </AreaChart>
                             </ResponsiveContainer>
                         </div>
@@ -218,7 +203,7 @@ export const Dashboard: React.FC = () => {
                                             <Cell key={`cell - ${index} `} fill={COLORS[index % COLORS.length]} />
                                         ))}
                                     </Pie>
-                                    <Tooltip contentStyle={tooltipStyle} />
+                                    <Tooltip />
                                 </PieChart>
                             </ResponsiveContainer>
                         </div>
