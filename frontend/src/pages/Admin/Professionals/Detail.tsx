@@ -151,10 +151,23 @@ const ProfessionalDetail: React.FC = () => {
                 <div className={styles.headerActions}>
                     <button
                         className={`${styles.actionBtn} ${styles.outlineBtn}`}
-                        onClick={() => {
-                            if (professional) {
-                                // Trigger the export logic or open URL
-                                window.open(`http://localhost:8000/api/professionals/export_excel/?id=${professional.id}`, '_blank');
+                        onClick={async () => {
+                            if (!professional) return;
+                            try {
+                                const response = await api.get('/professionals/export_excel/', {
+                                    params: { id: professional.id },
+                                    responseType: 'blob'
+                                });
+                                const url = window.URL.createObjectURL(new Blob([response.data]));
+                                const link = document.createElement('a');
+                                link.href = url;
+                                link.setAttribute('download', `profissional_${professional.cpf}.xlsx`);
+                                document.body.appendChild(link);
+                                link.click();
+                                link.remove();
+                            } catch (err) {
+                                console.error('Erro ao exportar:', err);
+                                alert('Erro ao exportar Excel.');
                             }
                         }}
                     >
