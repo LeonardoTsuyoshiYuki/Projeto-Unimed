@@ -149,6 +149,18 @@ const ProfessionalDetail: React.FC = () => {
                     </div>
                 </div>
                 <div className={styles.headerActions}>
+                    <button
+                        className={`${styles.actionBtn} ${styles.outlineBtn}`}
+                        onClick={() => {
+                            if (professional) {
+                                // Trigger the export logic or open URL
+                                window.open(`http://localhost:8000/api/professionals/export_excel/?id=${professional.id}`, '_blank');
+                            }
+                        }}
+                    >
+                        <Download size={18} />
+                        Exportar Excel
+                    </button>
                     <button className={`${styles.actionBtn} ${styles.outlineBtn}`} onClick={() => navigate('/admin/professionals')}>
                         Voltar
                     </button>

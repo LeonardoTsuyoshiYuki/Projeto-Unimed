@@ -3,6 +3,7 @@ from django.utils import timezone
 from datetime import timedelta
 from .models import Professional, Document
 
+class DocumentSerializer(serializers.ModelSerializer):
     file_size = serializers.SerializerMethodField()
     
     class Meta:
