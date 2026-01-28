@@ -336,11 +336,17 @@
 }
 
 .loading,
-.error {
+.error,
+.loadingContainer {
     text-align: center;
     padding: 4rem;
     color: var(--text-secondary);
     font-size: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
 }
 
 /* --- List View Styles (Restored) --- */
