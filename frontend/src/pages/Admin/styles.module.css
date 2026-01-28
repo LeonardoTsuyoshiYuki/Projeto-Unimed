@@ -1,16 +1,18 @@
 .loginContainer {
     max-width: 400px;
-    margin: 4rem auto;
-    padding: 2rem;
-    background: white;
+    margin: 6rem auto;
+    padding: 2.5rem;
+    background: var(--bg-secondary);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-lg);
     text-align: center;
+    border: 1px solid var(--border-color);
 }
 
 .loginContainer h2 {
     margin-bottom: 2rem;
-    color: var(--color-primary);
+    color: var(--text-primary);
+    font-weight: 700;
 }
 
 .form {
