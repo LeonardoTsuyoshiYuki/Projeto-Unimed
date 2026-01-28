@@ -6,10 +6,11 @@ import { Button } from '../../../components/ui/Button';
 import { Spinner } from '../../../components/ui/Spinner';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 import api from '../../../services/api';
+import { useTheme } from '../../../contexts/ThemeContext';
 
 
 
-const COLORS = ['#00995d', '#3b82f6', '#f59e0b', '#ef4444'];
+
 
 interface DashboardMetrics {
     total_registrations: number;
@@ -31,11 +32,27 @@ interface Professional {
 }
 
 export const Dashboard: React.FC = () => {
+    const { theme } = useTheme();
     const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
     const [professionals, setProfessionals] = useState<Professional[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
+
+    // Theme-aware Chart Colors
+    const chartColors = theme === 'dark'
+        ? ['#22c55e', '#3b82f6', '#fbbf24', '#f87171']
+        : ['#00995d', '#3b82f6', '#f59e0b', '#ef4444'];
+
+    const axisColor = theme === 'dark' ? '#94a3b8' : '#64748b';
+    const gridColor = theme === 'dark' ? '#334155' : '#e2e8f0';
+    const tooltipStyle = {
+        backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff',
+        border: 'none',
+        borderRadius: '8px',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+        color: theme === 'dark' ? '#f1f5f9' : '#1e293b'
+    };
 
     const fetchData = async () => {
         setLoading(true);
@@ -171,13 +188,11 @@ export const Dashboard: React.FC = () => {
                         <div style={{ width: '100%', height: 300 }}>
                             <ResponsiveContainer>
                                 <AreaChart data={areaData}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e0e0e0" />
-                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#666' }} />
-                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#666' }} />
-                                    <Tooltip
-                                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                                    />
-                                    <Area type="monotone" dataKey="registrations" stroke="#00995d" fill="#00995d" fillOpacity={0.1} />
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: axisColor }} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: axisColor }} />
+                                    <Tooltip contentStyle={tooltipStyle} />
+                                    <Area type="monotone" dataKey="registrations" stroke={chartColors[0]} fill={chartColors[0]} fillOpacity={0.1} />
                                 </AreaChart>
                             </ResponsiveContainer>
                         </div>
@@ -200,10 +215,10 @@ export const Dashboard: React.FC = () => {
                                         dataKey="value"
                                     >
                                         {pieData.map((_, index) => (
-                                            <Cell key={`cell - ${index} `} fill={COLORS[index % COLORS.length]} />
+                                            <Cell key={`cell - ${index} `} fill={chartColors[index % chartColors.length]} />
                                         ))}
                                     </Pie>
-                                    <Tooltip />
+                                    <Tooltip contentStyle={tooltipStyle} />
                                 </PieChart>
                             </ResponsiveContainer>
                         </div>
