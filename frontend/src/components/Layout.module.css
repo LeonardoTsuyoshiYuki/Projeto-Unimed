@@ -2,11 +2,12 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    background-color: var(--bg-primary);
 }
 
 .header {
-    background-color: white;
-    border-bottom: 1px solid #E2E8F0;
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
     padding: 1rem 0;
     box-shadow: var(--shadow-sm);
 }
@@ -26,18 +27,19 @@
 
 .logo h1 {
     font-size: 1.5rem;
-    color: var(--color-primary);
+    color: var(--primary-color);
 }
 
 .badge {
-    background-color: #DCFCE7;
-    color: #166534;
+    background-color: var(--success-bg);
+    color: var(--success-color);
     padding: 0.25rem 0.5rem;
     border-radius: 999px;
     font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.05em;
     text-transform: uppercase;
+    border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
 .header .container {
@@ -52,12 +54,12 @@
 }
 
 .nav a {
-    color: var(--color-text-muted);
+    color: var(--text-secondary);
     font-weight: 500;
 }
 
 .nav a:hover {
-    color: var(--color-primary);
+    color: var(--primary-color);
     text-decoration: none;
 }
 
@@ -67,11 +69,11 @@
 }
 
 .footer {
-    background-color: white;
-    border-top: 1px solid #E2E8F0;
+    background-color: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
     padding: 2rem 0;
     margin-top: auto;
-    color: var(--color-text-muted);
+    color: var(--text-secondary);
     font-size: 0.9rem;
     text-align: center;
 }
