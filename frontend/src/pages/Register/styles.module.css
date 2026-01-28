@@ -1,14 +1,15 @@
 .container {
     max-width: 800px;
     margin: 3rem auto;
-    padding: 2rem;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    padding: 2.5rem;
+    background-color: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-color);
 }
 
 .subtitle {
-    color: #64748b;
+    color: var(--text-secondary);
     margin-bottom: 2rem;
 }
 
@@ -21,16 +22,17 @@
 .row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+    gap: 1.5rem;
 }
 
 .sectionTitle {
     font-size: 1.25rem;
-    color: #0f172a;
-    border-bottom: 1px solid #e2e8f0;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
     padding-bottom: 0.5rem;
     margin-top: 1rem;
     margin-bottom: 0.5rem;
+    font-weight: 600;
 }
 
 .formGroup {
@@ -42,56 +44,58 @@
 .label {
     font-size: 0.875rem;
     font-weight: 500;
-    color: #334155;
+    color: var(--text-secondary);
     margin-bottom: 0.25rem;
 }
 
 .selectInput {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
     font-size: 1rem;
-    background-color: white;
-    transition: border-color 0.2s;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: var(--transition);
 }
 
 .selectInput:focus {
     outline: none;
-    border-color: #00995d;
-    box-shadow: 0 0 0 3px rgba(0, 153, 93, 0.1);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
 .fileSection {
-    background-color: #f8fafc;
+    background-color: var(--bg-primary);
     padding: 1.5rem;
-    border-radius: 6px;
-    border: 1px dashed #cbd5e1;
+    border-radius: var(--radius-md);
+    border: 1px dashed var(--border-color);
 }
 
 .fileLabel {
     display: block;
     font-weight: 500;
     margin-bottom: 0.5rem;
-    color: #334155;
+    color: var(--text-secondary);
 }
 
 .fileInput {
     display: block;
     width: 100%;
     margin-bottom: 0.5rem;
+    color: var(--text-primary);
 }
 
 .hint {
     font-size: 0.875rem;
-    color: #94a3b8;
+    color: var(--text-tertiary);
     margin: 0;
 }
 
 .consent {
     display: flex;
     align-items: flex-start;
-    gap: 0.5rem;
+    gap: 0.75rem;
     margin-top: 1rem;
 }
 
@@ -101,27 +105,27 @@
 
 .consent label {
     font-size: 0.9rem;
-    color: #475569;
+    color: var(--text-secondary);
 }
 
 .consent a {
-    color: #00995d;
+    color: var(--primary-color);
     text-decoration: none;
 }
 
 .errorMessage {
-    color: #dc2626;
+    color: var(--error-color);
     font-size: 0.875rem;
     margin-top: -1rem;
 }
 
 .errorAlert {
-    background-color: #fee2e2;
-    color: #b91c1c;
+    background-color: var(--error-bg);
+    color: var(--error-color);
     padding: 1rem;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     margin-bottom: 1.5rem;
-    border: 1px solid #fecaca;
+    border: 1px solid var(--error-color);
 }
 
 .submitBtn {

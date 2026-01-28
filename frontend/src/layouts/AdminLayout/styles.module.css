@@ -42,6 +42,29 @@
     margin-top: auto;
     border-top: 1px solid var(--border-color);
     padding-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.themeToggle {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.themeToggle:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
 }
 
 .content {
