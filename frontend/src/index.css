@@ -13,69 +13,64 @@
 
   /* Light Theme Defaults (Enterprise Standard) */
   --bg-primary: #f8fafc;
-  /* Slate 50 */
   --bg-secondary: #ffffff;
-  /* White */
   --bg-tertiary: #f1f5f9;
-  /* Slate 100 */
 
   --text-primary: #0f172a;
-  /* Slate 900 */
   --text-secondary: #64748b;
-  /* Slate 500 */
   --text-tertiary: #94a3b8;
-  /* Slate 400 */
 
   --border-color: #e2e8f0;
-  /* Slate 200 */
 
-  --primary-color: #3b82f6;
-  /* Blue 500 */
-  --primary-hover: #2563eb;
-  /* Blue 600 */
+  /* Global Primary - Unimed Green */
+  --primary-color: #10b981;
+  /* Emerald 500 */
+  --primary-hover: #059669;
+  /* Emerald 600 */
 
   --success-color: #10b981;
-  /* Emerald 500 */
   --success-bg: rgba(16, 185, 129, 0.1);
 
   --warning-color: #f59e0b;
-  /* Amber 500 */
   --warning-bg: rgba(245, 158, 11, 0.1);
 
   --error-color: #ef4444;
-  /* Red 500 */
   --error-bg: rgba(239, 68, 68, 0.1);
 
-  --info-color: #0ea5e9;
-  /* Sky 500 */
-  --info-bg: rgba(14, 165, 233, 0.1);
+  --info-color: #3b82f6;
+  --info-bg: rgba(59, 130, 246, 0.1);
 
   color-scheme: light;
 }
 
-/* Dark Theme Overrides */
+/* Dark Theme Overrides - Reference Based */
 .dark {
-  --bg-primary: #0f172a;
-  /* Slate 900 */
-  --bg-secondary: #1e293b;
-  /* Slate 800 */
-  --bg-tertiary: #334155;
-  /* Slate 700 */
+  /* Matte Black Backgrounds */
+  --bg-primary: #121212;
+  /* Deep Matte Black */
+  --bg-secondary: #1e1e1e;
+  /* Card Surface Grey */
+  --bg-tertiary: #2d2d2d;
+  /* Hover State */
 
-  --text-primary: #f1f5f9;
-  /* Slate 100 */
-  --text-secondary: #94a3b8;
-  /* Slate 400 */
-  --text-tertiary: #64748b;
-  /* Slate 500 */
+  --text-primary: #ffffff;
+  --text-secondary: #a1a1aa;
+  /* Zinc 400 */
+  --text-tertiary: #71717a;
+  /* Zinc 500 */
 
-  --border-color: #334155;
-  /* Slate 700 */
+  --border-color: #2d2d2d;
+  /* Subtle borders */
 
-  --primary-color: #3b82f6;
-  /* Blue 500 */
-  --primary-hover: #60a5fa;
-  /* Blue 400 */
+  --primary-color: #10b981;
+  /* Vibrant Green */
+  --primary-hover: #34d399;
+  /* Lighter Green for Dark Mode */
+
+  /* Adjustment for overlays */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
 
   color-scheme: dark;
 }

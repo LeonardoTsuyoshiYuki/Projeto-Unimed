@@ -9,7 +9,7 @@ import api from '../../../services/api';
 
 import { useTheme } from '../../../contexts/ThemeContext';
 
-const COLORS = ['#0088FE', '#00C49F', '#FF8042', '#FFBB28'];
+const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'];
 
 interface DashboardMetrics {
     total_registrations: number;
@@ -98,11 +98,12 @@ export const Dashboard: React.FC = () => {
     const pending = metrics.status_counts.find(s => s.status === 'PENDING')?.count || 0;
 
     const isDark = theme === 'dark';
-    const axisColor = isDark ? '#94a3b8' : '#64748b';
-    const gridColor = isDark ? '#334155' : '#e2e8f0';
+    const axisColor = isDark ? '#a1a1aa' : '#64748b'; // Updated for new dark text
+    const gridColor = isDark ? '#2d2d2d' : '#e2e8f0'; // Updated for new dark border
     const tooltipStyle = {
-        backgroundColor: isDark ? '#1e293b' : '#ffffff',
-        border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
+        backgroundColor: isDark ? '#1e1e1e' : '#ffffff', // Updated for new dark card
+        border: `1px solid ${isDark ? '#2d2d2d' : '#e2e8f0'}`,
+        color: isDark ? '#fff' : '#000',
         borderRadius: '8px',
         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
     };
@@ -181,11 +182,17 @@ export const Dashboard: React.FC = () => {
                         <div style={{ width: '100%', height: 300 }}>
                             <ResponsiveContainer>
                                 <AreaChart data={areaData}>
+                                    <defs>
+                                        <linearGradient id="colorReg" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
+                                            <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
                                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: axisColor }} />
                                     <YAxis axisLine={false} tickLine={false} tick={{ fill: axisColor }} />
                                     <Tooltip contentStyle={tooltipStyle} />
-                                    <Area type="monotone" dataKey="registrations" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.2} />
+                                    <Area type="monotone" dataKey="registrations" stroke="#10b981" fillOpacity={1} fill="url(#colorReg)" />
                                 </AreaChart>
                             </ResponsiveContainer>
                         </div>

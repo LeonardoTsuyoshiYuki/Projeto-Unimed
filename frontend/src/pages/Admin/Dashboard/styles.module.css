@@ -53,7 +53,7 @@
     background: var(--bg-secondary);
     padding: 1.5rem;
     border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-sm);
     display: flex;
     border: 1px solid var(--border-color);
     flex-direction: column;
@@ -62,7 +62,7 @@
 
 .card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-lg);
     border-color: var(--text-tertiary);
 }
 
@@ -118,7 +118,7 @@
     background: var(--bg-secondary);
     padding: 1.5rem;
     border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-sm);
     border: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
@@ -147,7 +147,7 @@
     background: var(--bg-secondary);
     padding: 1.5rem;
     border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-sm);
     border: 1px solid var(--border-color);
 }
 

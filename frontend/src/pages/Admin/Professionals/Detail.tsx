@@ -229,7 +229,7 @@ const ProfessionalDetail: React.FC = () => {
                     Documentos Comprobatórios
                 </div>
                 {(!professional.documents || professional.documents.length === 0) ? (
-                    <p style={{ color: '#64748b', fontStyle: 'italic' }}>Nenhum documento anexado.</p>
+                    <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>Nenhum documento anexado.</p>
                 ) : (
                     <ul className={styles.documentList}>
                         {professional.documents.map((doc) => (
@@ -258,6 +258,8 @@ const ProfessionalDetail: React.FC = () => {
                                             link.setAttribute('download', doc.file.split('/').pop() || 'documento');
                                             document.body.appendChild(link);
                                             link.click();
+                                            link.remove();
+                                            window.URL.revokeObjectURL(url);
                                         } catch (err) {
                                             alert('Erro ao baixar documento.');
                                         }
@@ -313,7 +315,7 @@ const ProfessionalDetail: React.FC = () => {
                             <div className={styles.auditDetails}>{log.details}</div>
                         </li>
                     ))}
-                    {auditLogs.length === 0 && <p style={{ color: '#94a3b8' }}>Nenhum registro de histórico.</p>}
+                    {auditLogs.length === 0 && <p style={{ color: 'var(--text-secondary)' }}>Nenhum registro de histórico.</p>}
                 </ul>
             </section>
         </div>
