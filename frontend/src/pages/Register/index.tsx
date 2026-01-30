@@ -141,7 +141,7 @@ export const Register: React.FC = () => {
         try {
             const finalEducation = data.education === 'Outros' ? data.custom_education : data.education;
 
-            const response = await publicApi.post('/professionals/', {
+            const response = await publicApi.post('/api/professionals/', {
                 ...data,
                 graduation_year: parseInt(data.graduation_year.toString(), 10),
                 experience_years: parseInt(data.experience_years.toString(), 10),
@@ -156,7 +156,7 @@ export const Register: React.FC = () => {
                 formData.append('file', file);
                 formData.append('professional', professionalId);
                 formData.append('description', 'Documento de Habilitação');
-                return publicApi.post('/documents/', formData, {
+                return publicApi.post('/api/documents/', formData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
             });
