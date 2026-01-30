@@ -11,6 +11,14 @@ EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 # Disable scaling or complex logic if present
 DEBUG = False
 
+# Use SQLite for tests to avoid Postgres dependency
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': ':memory:',
+    }
+}
+
 # Redefine REST_FRAMEWORK to ensure Throttling is DISABLED by default
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',

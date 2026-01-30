@@ -3,11 +3,23 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import axios from 'axios';
-import styles from './styles.module.css';
-import { Input } from '../../components/ui/Input';
-import { Button } from '../../components/ui/Button';
-import api from '../../services/api';
 import { useNavigate } from 'react-router-dom';
+import {
+    Box,
+    Button,
+    Container,
+    Grid,
+    Paper,
+    TextField,
+    Typography,
+    MenuItem,
+    Checkbox,
+    FormControlLabel,
+    Alert,
+    CircularProgress,
+} from '@mui/material';
+import { Upload, CheckCircle, AlertCircle } from 'lucide-react';
+import { publicApi } from '../../services/api';
 
 const educationOptions = [
     'Agente Comunitário de Saúde', 'Agente de Combate às Endemias', 'Acompanhante Terapêutico',
@@ -42,11 +54,7 @@ const schema = z.object({
     cpf: z.string().length(11, "CPF deve ter 11 dígitos (apenas números)"),
     email: z.string().email("E-mail inválido"),
     phone: z.string().min(10, "Telefone inválido"),
-
-    // Personal Data
     birth_date: z.string().refine((val) => !isNaN(Date.parse(val)), "Data inválida"),
-
-    // Address Data
     zip_code: z.string().min(8, "CEP inválido").max(9, "CEP inválido"),
     street: z.string().min(3, "Logradouro obrigatório"),
     number: z.string().min(1, "Número obrigatório"),
@@ -54,8 +62,6 @@ const schema = z.object({
     neighborhood: z.string().min(2, "Bairro obrigatório"),
     city: z.string().min(2, "Cidade obrigatória"),
     state: z.string().length(2, "UF inválida"),
-
-    // Professional Data
     education: z.string().nonempty("Selecione sua formação acadêmica"),
     custom_education: z.string().optional(),
     institution: z.string().min(2, "Instituição é obrigatória"),
@@ -64,7 +70,6 @@ const schema = z.object({
     council_number: z.string().nonempty("Número do conselho é obrigatório"),
     area_of_action: z.string().optional(),
     experience_years: z.string().regex(/^\d+$/, "Apenas números"),
-
     consent_given: z.boolean().refine(val => val === true, "Você deve aceitar os termos da LGPD"),
 }).superRefine((data, ctx) => {
     if (data.education === 'Outros' && !data.custom_education) {
@@ -108,7 +113,7 @@ export const Register: React.FC = () => {
                 setValue('neighborhood', response.data.bairro);
                 setValue('city', response.data.localidade);
                 setValue('state', response.data.uf);
-                setFocus('number'); // Move focus to Number
+                setFocus('number');
                 setGeneralError('');
             } catch (error) {
                 console.error("Erro ao buscar CEP", error);
@@ -123,7 +128,6 @@ export const Register: React.FC = () => {
             return;
         }
 
-        // Check file size
         for (let i = 0; i < files.length; i++) {
             if (files[i].size > 5 * 1024 * 1024) {
                 setGeneralError(`O arquivo ${files[i].name} excede o limite de 5MB.`);
@@ -135,13 +139,9 @@ export const Register: React.FC = () => {
         setGeneralError('');
 
         try {
-            // Determine final education value
-            const finalEducation = data.education === 'Outros'
-                ? data.custom_education
-                : data.education;
+            const finalEducation = data.education === 'Outros' ? data.custom_education : data.education;
 
-            // 1. Create Professional
-            const response = await api.post('/professionals/', {
+            const response = await publicApi.post('/professionals/', {
                 ...data,
                 graduation_year: parseInt(data.graduation_year.toString(), 10),
                 experience_years: parseInt(data.experience_years.toString(), 10),
@@ -151,13 +151,12 @@ export const Register: React.FC = () => {
 
             const professionalId = response.data.id;
 
-            // 2. Upload Files
             const fileUploads = Array.from(files).map(file => {
                 const formData = new FormData();
                 formData.append('file', file);
                 formData.append('professional', professionalId);
                 formData.append('description', 'Documento de Habilitação');
-                return api.post('/documents/', formData, {
+                return publicApi.post('/documents/', formData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
             });
@@ -180,222 +179,156 @@ export const Register: React.FC = () => {
     };
 
     return (
-        <div className={styles.container}>
-            <h2>Formulário de Credenciamento</h2>
-            <p className={styles.subtitle}>Preencha todos os dados obrigatórios para iniciar sua análise.</p>
+        <Container maxWidth="md" sx={{ py: 6 }}>
+            <Paper sx={{ p: { xs: 3, md: 5 }, borderRadius: 4, boxShadow: 3 }}>
+                <Box sx={{ mb: 4, textAlign: 'center' }}>
+                    <Typography variant="h4" fontWeight="bold" gutterBottom color="primary">
+                        Credenciamento
+                    </Typography>
+                    <Typography color="text.secondary">
+                        Preencha o formulário para se juntar à nossa rede de profissionais.
+                    </Typography>
+                </Box>
 
-            {generalError && (
-                <div className={styles.errorAlert}>
-                    {generalError}
-                </div>
-            )}
-
-            <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
-                {/* Dados Pessoais */}
-                <h3 className={styles.sectionTitle}>Dados Pessoais</h3>
-
-                <Input
-                    label="Nome Completo"
-                    placeholder="Ex: Dr. João Silva"
-                    {...register('name')}
-                    error={errors.name?.message}
-                />
-
-                <div className={styles.row}>
-                    <Input
-                        label="CPF (somente números)"
-                        placeholder="00000000000"
-                        maxLength={11}
-                        {...register('cpf')}
-                        error={errors.cpf?.message}
-                    />
-                    <Input
-                        label="Data de Nascimento"
-                        type="date"
-                        {...register('birth_date')}
-                        error={errors.birth_date?.message}
-                    />
-                </div>
-
-                <div className={styles.row}>
-                    <Input
-                        label="Telefone/Celular"
-                        placeholder="(00) 00000-0000"
-                        {...register('phone')}
-                        error={errors.phone?.message}
-                    />
-                    <Input
-                        label="E-mail Profissional"
-                        type="email"
-                        placeholder="email@exemplo.com"
-                        {...register('email')}
-                        error={errors.email?.message}
-                    />
-                </div>
-
-                {/* Endereço */}
-                <h3 className={styles.sectionTitle}>Endereço</h3>
-
-                <div className={styles.row}>
-                    <Input
-                        label="CEP (somente números)"
-                        placeholder="00000000"
-                        maxLength={8}
-                        {...register('zip_code')}
-                        onBlur={handleCepBlur}
-                        error={errors.zip_code?.message}
-                    />
-                    <Input
-                        label="Cidade"
-                        placeholder="..."
-                        readOnly
-                        {...register('city')}
-                        error={errors.city?.message}
-                    />
-                    <Input
-                        label="UF"
-                        placeholder=".."
-                        readOnly
-                        maxLength={2}
-                        {...register('state')}
-                        error={errors.state?.message}
-                    />
-                </div>
-
-                <div className={styles.row}>
-                    <Input
-                        label="Logradouro"
-                        placeholder="..."
-                        readOnly
-                        {...register('street')}
-                        error={errors.street?.message}
-                    />
-                    <Input
-                        label="Número"
-                        placeholder="123"
-                        {...register('number')}
-                        error={errors.number?.message}
-                    />
-                </div>
-
-                <div className={styles.row}>
-                    <Input
-                        label="Bairro"
-                        placeholder="..."
-                        readOnly
-                        {...register('neighborhood')}
-                        error={errors.neighborhood?.message}
-                    />
-                    <Input
-                        label="Complemento (Opcional)"
-                        placeholder="Apto 101"
-                        {...register('complement')}
-                        error={errors.complement?.message}
-                    />
-                </div>
-
-
-                {/* Dados Profissionais */}
-                <h3 className={styles.sectionTitle}>Dados Profissionais</h3>
-
-                <div className={styles.formGroup}>
-                    <label className={styles.label}>Formação Acadêmica</label>
-                    <select
-                        {...register('education')}
-                        className={styles.selectInput}
-                    >
-                        <option value="">Selecione sua formação...</option>
-                        {educationOptions.map((option, index) => (
-                            <option key={index} value={option}>{option}</option>
-                        ))}
-                    </select>
-                    {errors.education && <span className={styles.errorMessage}>{errors.education.message}</span>}
-                </div>
-
-                {selectedEducation === 'Outros' && (
-                    <Input
-                        label="Qual sua formação?"
-                        placeholder="Digite sua formação profissional"
-                        {...register('custom_education')}
-                        error={errors.custom_education?.message}
-                    />
+                {generalError && (
+                    <Alert severity="error" sx={{ mb: 3 }} icon={<AlertCircle />}>
+                        {generalError}
+                    </Alert>
                 )}
 
-                <div className={styles.row}>
-                    <Input
-                        label="Instituição de Ensino"
-                        placeholder="Ex: USP, UNIFESP"
-                        {...register('institution')}
-                        error={errors.institution?.message}
-                    />
-                    <Input
-                        label="Ano Conclusão"
-                        placeholder="2020"
-                        maxLength={4}
-                        {...register('graduation_year')}
-                        error={errors.graduation_year?.message}
-                    />
-                </div>
+                <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+                    <Typography variant="h6" fontWeight={600} gutterBottom sx={{ mt: 2, borderBottom: 1, borderColor: 'divider', pb: 1 }}>
+                        Dados Pessoais
+                    </Typography>
+                    <Grid container spacing={2}>
+                        <Grid size={{ xs: 12 }}>
+                            <TextField fullWidth label="Nome Completo" placeholder="Ex: Dr. João Silva" {...register('name')} error={!!errors.name} helperText={errors.name?.message} />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField fullWidth label="CPF (somente números)" placeholder="00000000000" inputProps={{ maxLength: 11 }} {...register('cpf')} error={!!errors.cpf} helperText={errors.cpf?.message} />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField fullWidth type="date" label="Data de Nascimento" InputLabelProps={{ shrink: true }} {...register('birth_date')} error={!!errors.birth_date} helperText={errors.birth_date?.message} />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField fullWidth label="Telefone/Celular" placeholder="(00) 00000-0000" {...register('phone')} error={!!errors.phone} helperText={errors.phone?.message} />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField fullWidth label="E-mail Profissional" type="email" placeholder="email@exemplo.com" {...register('email')} error={!!errors.email} helperText={errors.email?.message} />
+                        </Grid>
+                    </Grid>
 
-                <div className={styles.row}>
-                    <Input
-                        label="Conselho de Classe"
-                        placeholder="Ex: CRM-SP"
-                        {...register('council_name')}
-                        error={errors.council_name?.message}
-                    />
-                    <Input
-                        label="Número Inscrição"
-                        placeholder="123456"
-                        {...register('council_number')}
-                        error={errors.council_number?.message}
-                    />
-                </div>
+                    <Typography variant="h6" fontWeight={600} gutterBottom sx={{ mt: 4, borderBottom: 1, borderColor: 'divider', pb: 1 }}>
+                        Endereço
+                    </Typography>
+                    <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, sm: 4 }}>
+                            <TextField fullWidth label="CEP" placeholder="00000000" inputProps={{ maxLength: 8 }} {...register('zip_code')} onBlur={handleCepBlur} error={!!errors.zip_code} helperText={errors.zip_code?.message} />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField fullWidth label="Cidade" InputProps={{ readOnly: true }} {...register('city')} error={!!errors.city} helperText={errors.city?.message} />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 2 }}>
+                            <TextField fullWidth label="UF" InputProps={{ readOnly: true }} {...register('state')} error={!!errors.state} helperText={errors.state?.message} />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 9 }}>
+                            <TextField fullWidth label="Logradouro" InputProps={{ readOnly: true }} {...register('street')} error={!!errors.street} helperText={errors.street?.message} />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 3 }}>
+                            <TextField fullWidth label="Número" {...register('number')} error={!!errors.number} helperText={errors.number?.message} />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField fullWidth label="Bairro" InputProps={{ readOnly: true }} {...register('neighborhood')} error={!!errors.neighborhood} helperText={errors.neighborhood?.message} />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField fullWidth label="Complemento" {...register('complement')} />
+                        </Grid>
+                    </Grid>
 
-                <div className={styles.row}>
-                    <Input
-                        label="Tempo de Experiência (anos)"
-                        type="number"
-                        placeholder="Ex: 5"
-                        {...register('experience_years')}
-                        error={errors.experience_years?.message}
-                    />
-                    <Input
-                        label="Área de Atuação (Opcional)"
-                        placeholder="Ex: Urgência e Emergência"
-                        {...register('area_of_action')}
-                        error={errors.area_of_action?.message}
-                    />
-                </div>
+                    <Typography variant="h6" fontWeight={600} gutterBottom sx={{ mt: 4, borderBottom: 1, borderColor: 'divider', pb: 1 }}>
+                        Dados Profissionais
+                    </Typography>
+                    <Grid container spacing={2}>
+                        <Grid size={{ xs: 12 }}>
+                            <TextField select fullWidth label="Formação Acadêmica" defaultValue="" {...register('education')} error={!!errors.education} helperText={errors.education?.message}>
+                                {educationOptions.map((option) => (
+                                    <MenuItem key={option} value={option}>{option}</MenuItem>
+                                ))}
+                            </TextField>
+                        </Grid>
+                        {selectedEducation === 'Outros' && (
+                            <Grid size={{ xs: 12 }}>
+                                <TextField fullWidth label="Qual sua formação?" placeholder="Digite sua formação" {...register('custom_education')} error={!!errors.custom_education} helperText={errors.custom_education?.message} />
+                            </Grid>
+                        )}
+                        <Grid size={{ xs: 12, sm: 8 }}>
+                            <TextField fullWidth label="Instituição de Ensino" placeholder="Ex: USP" {...register('institution')} error={!!errors.institution} helperText={errors.institution?.message} />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 4 }}>
+                            <TextField fullWidth label="Ano Conclusão" placeholder="2020" inputProps={{ maxLength: 4 }} {...register('graduation_year')} error={!!errors.graduation_year} helperText={errors.graduation_year?.message} />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField fullWidth label="Conselho de Classe" placeholder="Ex: CRM-SP" {...register('council_name')} error={!!errors.council_name} helperText={errors.council_name?.message} />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField fullWidth label="Número Inscrição" placeholder="123456" {...register('council_number')} error={!!errors.council_number} helperText={errors.council_number?.message} />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField fullWidth label="Tempo de Experiência (anos)" type="number" placeholder="Ex: 5" {...register('experience_years')} error={!!errors.experience_years} helperText={errors.experience_years?.message} />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField fullWidth label="Área de Atuação (Opcional)" placeholder="Ex: Cardiologia" {...register('area_of_action')} />
+                        </Grid>
+                    </Grid>
 
-                <div className={styles.fileSection}>
-                    <label className={styles.fileLabel}>Documentos Comprobatórios (PDF, JPG, PNG)</label>
-                    <input
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        multiple
-                        onChange={handleFileChange}
-                        className={styles.fileInput}
-                    />
-                    <p className={styles.hint}>Tamanho máx: 5MB por arquivo.</p>
-                </div>
+                    <Typography variant="h6" fontWeight={600} gutterBottom sx={{ mt: 4, borderBottom: 1, borderColor: 'divider', pb: 1 }}>
+                        Documentação
+                    </Typography>
 
-                <div className={styles.consent}>
-                    <input
-                        type="checkbox"
-                        id="consent"
-                        {...register('consent_given')}
-                    />
-                    <label htmlFor="consent">
-                        Declaro que li e aceito o tratamento dos meus dados pessoais conforme a <a href="#">Política de Privacidade</a> e LGPD.
-                    </label>
-                </div>
-                {errors.consent_given && <span className={styles.errorMessage}>{errors.consent_given.message}</span>}
+                    <Box sx={{ p: 3, border: '1px dashed', borderColor: 'divider', borderRadius: 2, bgcolor: 'background.default', textAlign: 'center' }}>
+                        <Button
+                            variant="outlined"
+                            component="label"
+                            startIcon={<Upload />}
+                            size="large"
+                        >
+                            Selecionar Arquivos (PDF, JPG, PNG)
+                            <input type="file" hidden accept=".pdf,.jpg,.jpeg,.png" multiple onChange={handleFileChange} />
+                        </Button>
+                        <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 1 }}>
+                            Tamanho máximo: 5MB por arquivo.
+                        </Typography>
+                        {files && files.length > 0 && (
+                            <Box sx={{ mt: 2 }}>
+                                {Array.from(files).map((file, idx) => (
+                                    <Typography key={idx} variant="body2" color="success.main" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                                        <CheckCircle size={14} /> {file.name}
+                                    </Typography>
+                                ))}
+                            </Box>
+                        )}
+                    </Box>
 
-                <Button type="submit" isLoading={isLoading} className={styles.submitBtn}>
-                    Enviar Solicitação
-                </Button>
-            </form>
-        </div>
+                    <Box sx={{ mt: 3 }}>
+                        <FormControlLabel
+                            control={<Checkbox {...register('consent_given')} />}
+                            label={<Typography variant="body2" color="text.secondary">Declaro que li e aceito o tratamento dos meus dados pessoais conforme a Política de Privacidade e LGPD.</Typography>}
+                        />
+                        {errors.consent_given && <Typography color="error" variant="caption" display="block">{errors.consent_given.message}</Typography>}
+                    </Box>
+
+                    <Button
+                        type="submit"
+                        variant="contained"
+                        size="large"
+                        fullWidth
+                        disabled={isLoading}
+                        sx={{ mt: 4, py: 1.5, fontSize: '1.1rem', fontWeight: 'bold' }}
+                    >
+                        {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Enviar Solicitação'}
+                    </Button>
+                </Box>
+            </Paper>
+        </Container>
     );
 };

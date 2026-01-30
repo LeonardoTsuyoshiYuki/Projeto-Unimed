@@ -4,13 +4,11 @@ import { Home } from './pages/Home';
 import { Register } from './pages/Register';
 import { Admin } from './pages/Admin';
 import { AuthProvider } from './contexts/AuthContext';
-import { ThemeProvider } from './contexts/ThemeContext';
-
-
+import { AppThemeProvider } from './contexts/ColorModeContext';
 
 function App() {
   return (
-    <ThemeProvider>
+    <AppThemeProvider>
       <AuthProvider>
         <BrowserRouter>
           <Routes>
@@ -22,7 +20,7 @@ function App() {
           </Routes>
         </BrowserRouter>
       </AuthProvider>
-    </ThemeProvider>
+    </AppThemeProvider>
   );
 }
 

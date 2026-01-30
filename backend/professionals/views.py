@@ -56,13 +56,8 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
                 details=f"Professional registered: {instance.name}"
             )
             # Email notification
-            send_mail(
-                'Recebemos seu cadastro - Unimed',
-                f'Olá {instance.name}, recebemos seu cadastro e ele está em análise.',
-                'no-reply@unimed.com',
-                [instance.email],
-                fail_silently=True,
-            )
+            from .services import send_confirmation_email
+            send_confirmation_email(instance)
         except Exception as e:
             logger.error(
                 "Registration creation failed", 

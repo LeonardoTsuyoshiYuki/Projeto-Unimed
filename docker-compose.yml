@@ -34,8 +34,11 @@ services:
       - POSTGRES_USER=unimed_user
       - POSTGRES_PASSWORD=unimed_pass
       - POSTGRES_HOST=db
-      - DEBUG=1
-      - SECRET_KEY=dev_secret_key_change_in_prod
+      - DEBUG=${DEBUG}
+      - SECRET_KEY=${SECRET_KEY}
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - FROM_EMAIL=${FROM_EMAIL}
+      - EMAIL_MODE=${EMAIL_MODE}
 
   frontend:
     build:

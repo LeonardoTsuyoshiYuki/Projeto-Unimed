@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
+import dj_database_url
 
 load_dotenv()
 
@@ -11,7 +12,15 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dev-key')
 
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
+
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
+CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', 'http://127.0.0.1').split(',')
+if RENDER_EXTERNAL_HOSTNAME:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_EXTERNAL_HOSTNAME}')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -67,14 +76,16 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('POSTGRES_DB', 'unimed_db'),
-        'USER': os.environ.get('POSTGRES_USER', 'unimed_user'),
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'unimed_pass'),
-        'HOST': os.environ.get('POSTGRES_HOST', 'db'), 
-        'PORT': os.environ.get('POSTGRES_PORT', '5432'),
-    }
+    "default": dj_database_url.config(
+        default=(
+            f"postgresql://{os.getenv('POSTGRES_USER','unimed_user')}:"
+            f"{os.getenv('POSTGRES_PASSWORD','unimed_pass')}@"
+            f"{os.getenv('POSTGRES_HOST','db')}:"
+            f"{os.getenv('POSTGRES_PORT','5432')}/"
+            f"{os.getenv('POSTGRES_DB','unimed_db')}"
+        ),
+        conn_max_age=600,
+    )
 }
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -160,6 +171,12 @@ EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'False') == 'True'
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = 'no-reply@unimed.com'
+
+# SendGrid Configuration
+EMAIL_MODE = os.environ.get('EMAIL_MODE', 'dev') # dev, sandbox, prod
+SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY', None)
+SENDGRID_FROM_EMAIL = os.environ.get('SENDGRID_FROM_EMAIL', 'no-reply@unimed.com.br')
+SENDGRID_FROM_NAME = os.environ.get('SENDGRID_FROM_NAME', 'Unimed')
 
 # Security Hardening
 if not DEBUG:

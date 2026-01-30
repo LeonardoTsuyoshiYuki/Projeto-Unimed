@@ -18,5 +18,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project files
 COPY . .
 
-# We will run this via docker-compose usually, but just in case
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD sh -c "python manage.py migrate --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers ${WEB_CONCURRENCY:-1} --timeout 120"

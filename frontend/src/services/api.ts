@@ -13,4 +13,9 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
+// Public API instance for unauthenticated requests
+export const publicApi = axios.create({
+    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
+});
+
 export default api;

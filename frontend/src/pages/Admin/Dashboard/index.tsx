@@ -1,16 +1,28 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styles from './styles.module.css';
-import { Button } from '../../../components/ui/Button';
-import { Spinner } from '../../../components/ui/Spinner';
+import {
+    Box,
+    Container,
+    Grid,
+    Card,
+    CardContent,
+    Typography,
+    Paper,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Chip,
+    useTheme as useMuiTheme,
+    CircularProgress,
+    Button as MuiButton
+} from '@mui/material';
+import { RefreshCw } from 'lucide-react';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 import api from '../../../services/api';
-import { useTheme } from '../../../contexts/ThemeContext';
-
-
-
-
+import { useTheme } from '../../../hooks/useTheme';
 
 interface DashboardMetrics {
     total_registrations: number;
@@ -33,6 +45,7 @@ interface Professional {
 
 export const Dashboard: React.FC = () => {
     const { theme } = useTheme();
+    const muiTheme = useMuiTheme();
     const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
     const [professionals, setProfessionals] = useState<Professional[]>([]);
     const [loading, setLoading] = useState(true);
@@ -41,18 +54,11 @@ export const Dashboard: React.FC = () => {
 
     // Theme-aware Chart Colors
     const chartColors = theme === 'dark'
-        ? ['#22c55e', '#3b82f6', '#fbbf24', '#f87171']
-        : ['#00995d', '#3b82f6', '#f59e0b', '#ef4444'];
+        ? [muiTheme.palette.success.main, muiTheme.palette.info.main, muiTheme.palette.warning.main, muiTheme.palette.error.main]
+        : [muiTheme.palette.success.main, muiTheme.palette.info.main, muiTheme.palette.warning.main, muiTheme.palette.error.main];
 
-    const axisColor = theme === 'dark' ? '#94a3b8' : '#64748b';
-    const gridColor = theme === 'dark' ? '#334155' : '#e2e8f0';
-    const tooltipStyle = {
-        backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff',
-        border: 'none',
-        borderRadius: '8px',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-        color: theme === 'dark' ? '#f1f5f9' : '#1e293b'
-    };
+    const axisColor = muiTheme.palette.text.secondary;
+    const gridColor = muiTheme.palette.divider;
 
     const fetchData = async () => {
         setLoading(true);
@@ -78,26 +84,27 @@ export const Dashboard: React.FC = () => {
 
     if (loading) {
         return (
-            <div className={styles.loadingContainer}>
-                <Spinner size="lg" color="var(--primary-color)" />
-                <p>Carregando painel...</p>
-            </div>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: 2 }}>
+                <CircularProgress size={60} />
+                <Typography color="text.secondary">Carregando painel...</Typography>
+            </Box>
         );
     }
 
     if (error) {
         return (
-            <div className={styles.errorContainer}>
-                <h3>Ops! Algo deu errado.</h3>
-                <p>{error}</p>
-                <Button onClick={fetchData}>Tentar Novamente</Button>
-            </div>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: 2 }}>
+                <Typography variant="h5" color="error">Ops! Algo deu errado.</Typography>
+                <Typography color="text.secondary">{error}</Typography>
+                <MuiButton variant="contained" onClick={fetchData} startIcon={<RefreshCw size={18} />}>
+                    Tentar Novamente
+                </MuiButton>
+            </Box>
         );
     }
 
     if (!metrics) return null;
 
-    // Transform Data for Charts
     const pieData = metrics.status_counts.map(item => ({
         name: item.status,
         value: item.count
@@ -113,98 +120,129 @@ export const Dashboard: React.FC = () => {
     const adjustment = metrics.status_counts.find(s => s.status === 'ADJUSTMENT_REQUESTED')?.count || 0;
     const pending = metrics.status_counts.find(s => s.status === 'PENDING')?.count || 0;
 
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'APPROVED': return 'success';
+            case 'REJECTED': return 'error';
+            case 'ADJUSTMENT_REQUESTED': return 'info';
+            case 'PENDING': return 'warning';
+            default: return 'default';
+        }
+    };
 
     return (
-        <div className={styles.dashboard}>
-            <header className={styles.header}>
-                <div>
-                    <h1>Dashboard Administrativo</h1>
-                    <p>Visão geral de credenciamentos e métricas</p>
-                </div>
-                <Button onClick={fetchData}>Atualizar</Button>
-            </header>
+        <Container maxWidth="xl" sx={{ py: 4, animation: 'fadeIn 0.5s' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                <Box>
+                    <Typography variant="h4" fontWeight="bold" gutterBottom>
+                        Dashboard Administrativo
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary">
+                        Visão geral de credenciamentos e métricas
+                    </Typography>
+                </Box>
+                <MuiButton variant="contained" onClick={fetchData} startIcon={<RefreshCw size={18} />}>
+                    Atualizar
+                </MuiButton>
+            </Box>
 
             {/* KPI Cards */}
-            <div className={styles.grid}>
-                <div className={styles.card}>
-                    <h3>Total</h3>
-                    <p className={styles.bigNumber}>{metrics.total_registrations}</p>
-                    <span className={styles.label}>Cadastros Totais</span>
-                </div>
-                <div className={styles.card}>
-                    <h3>Pendentes</h3>
-                    <p className={`${styles.bigNumber} ${styles.warning} `}>{pending}</p>
-                    <span className={styles.label}>Aguardando Análise</span>
-                </div>
-                <div className={styles.card}>
-                    <h3>Aprovados</h3>
-                    <p className={`${styles.bigNumber} ${styles.success} `}>{approved}</p>
-                    <span className={styles.label}>Credenciados</span>
-                </div>
-                <div className={styles.card}>
-                    <h3>Reprovados</h3>
-                    <p className={`${styles.bigNumber} ${styles.error} `}>{rejected}</p>
-                    <span className={styles.label}>Negados</span>
-                </div>
-                <div className={styles.card}>
-                    <h3>Ajustes</h3>
-                    <p className={`${styles.bigNumber} ${styles.info} `}>{adjustment}</p>
-                    <span className={styles.label}>Solicitados</span>
-                </div>
-                <div className={styles.card}>
-                    <h3>Recentes</h3>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
-                        <div style={{ textAlign: 'center' }}>
-                            <p className={styles.bigNumber} style={{ fontSize: '1.5rem' }}>{metrics.last_30_days}</p>
-                            <span className={styles.label} style={{ fontSize: '0.7rem' }}>30d</span>
-                        </div>
-                        <div style={{ textAlign: 'center' }}>
-                            <p className={styles.bigNumber} style={{ fontSize: '1.5rem' }}>{metrics.last_60_days}</p>
-                            <span className={styles.label} style={{ fontSize: '0.7rem' }}>60d</span>
-                        </div>
-                        <div style={{ textAlign: 'center' }}>
-                            <p className={styles.bigNumber} style={{ fontSize: '1.5rem' }}>{metrics.last_90_days}</p>
-                            <span className={styles.label} style={{ fontSize: '0.7rem' }}>90d</span>
-                        </div>
-                    </div>
-                </div>
-                <div className={styles.card}>
-                    <h3>Eficiência</h3>
-                    <p className={`${styles.bigNumber} ${styles.info}`}>{metrics.analyzed_this_month}</p>
-                    <span className={styles.label}>Análises no Mês</span>
-                </div>
-                <div className={styles.card}>
-                    <h3>Tempo Médio</h3>
-                    <p className={styles.bigNumber}>{metrics.avg_analysis_time_days} <span style={{ fontSize: '0.5em' }}>dias</span></p>
-                    <span className={styles.label}>Cadastro → Decisão</span>
-                </div>
-            </div>
+            <Grid container spacing={3} sx={{ mb: 4 }}>
+                {[
+                    { title: 'Total', value: metrics.total_registrations, label: 'Cadastros Totais', color: 'text.primary' },
+                    { title: 'Pendentes', value: pending, label: 'Aguardando Análise', color: 'warning.main' },
+                    { title: 'Aprovados', value: approved, label: 'Credenciados', color: 'success.main' },
+                    { title: 'Reprovados', value: rejected, label: 'Negados', color: 'error.main' },
+                    { title: 'Ajustes', value: adjustment, label: 'Solicitados', color: 'info.main' }
+                ].map((kpi) => (
+                    <Grid size={{ xs: 12, sm: 6, md: 2.4 }} key={kpi.title}>
+                        <Card sx={{ height: '100%' }}>
+                            <CardContent>
+                                <Typography variant="overline" color="text.secondary" fontWeight={700}>
+                                    {kpi.title}
+                                </Typography>
+                                <Typography variant="h3" fontWeight={700} sx={{ color: kpi.color, my: 1 }}>
+                                    {kpi.value}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary" sx={{ borderTop: 1, borderColor: 'divider', pt: 1, display: 'block' }}>
+                                    {kpi.label}
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                ))}
+            </Grid>
+
+            {/* Efficiency Cards */}
+            <Grid container spacing={3} sx={{ mb: 4 }}>
+                <Grid size={{ xs: 12, md: 6 }}>
+                    <Card>
+                        <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Box>
+                                <Typography variant="overline" color="text.secondary" fontWeight={700}>
+                                    Eficiência
+                                </Typography>
+                                <Typography variant="h4" fontWeight={700} color="info.main">
+                                    {metrics.analyzed_this_month}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    Análises no Mês
+                                </Typography>
+                            </Box>
+                            <Box>
+                                <Typography variant="overline" color="text.secondary" fontWeight={700}>
+                                    Tempo Médio
+                                </Typography>
+                                <Typography variant="h4" fontWeight={700}>
+                                    {metrics.avg_analysis_time_days} <Typography component="span" variant="caption">dias</Typography>
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    Cadastro → Decisão
+                                </Typography>
+                            </Box>
+                        </CardContent>
+                    </Card>
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                    <Card sx={{ height: '100%' }}>
+                        <CardContent sx={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', height: '100%' }}>
+                            {[
+                                { val: metrics.last_30_days, label: '30d' },
+                                { val: metrics.last_60_days, label: '60d' },
+                                { val: metrics.last_90_days, label: '90d' },
+                            ].map((item) => (
+                                <Box key={item.label} sx={{ textAlign: 'center' }}>
+                                    <Typography variant="h4" fontWeight={700}>{item.val}</Typography>
+                                    <Typography variant="caption" color="text.secondary">{item.label}</Typography>
+                                </Box>
+                            ))}
+                        </CardContent>
+                    </Card>
+                </Grid>
+            </Grid>
 
             {/* Charts Section */}
-            <div className={styles.chartsRow}>
-                <div className={styles.chartContainer}>
-                    <h4>Evolução de Cadastros</h4>
-                    {areaData.length > 0 ? (
-                        <div style={{ width: '100%', height: 300 }}>
+            <Grid container spacing={3} sx={{ mb: 4 }}>
+                <Grid size={{ xs: 12, md: 8 }}>
+                    <Paper sx={{ p: 3, borderRadius: 4 }}>
+                        <Typography variant="h6" gutterBottom fontWeight={600}>Evolução de Cadastros</Typography>
+                        <Box sx={{ height: 300, width: '100%' }}>
                             <ResponsiveContainer>
                                 <AreaChart data={areaData}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
                                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: axisColor }} />
                                     <YAxis axisLine={false} tickLine={false} tick={{ fill: axisColor }} />
-                                    <Tooltip contentStyle={tooltipStyle} />
-                                    <Area type="monotone" dataKey="registrations" stroke={chartColors[0]} fill={chartColors[0]} fillOpacity={0.1} />
+                                    <Tooltip contentStyle={{ backgroundColor: muiTheme.palette.background.paper, borderRadius: 8, boxShadow: muiTheme.shadows[3], border: 'none', color: muiTheme.palette.text.primary }} />
+                                    <Area type="monotone" dataKey="registrations" stroke={muiTheme.palette.success.main} fill={muiTheme.palette.success.main} fillOpacity={0.1} />
                                 </AreaChart>
                             </ResponsiveContainer>
-                        </div>
-                    ) : (
-                        <div className={styles.emptyChart}>Sem dados suficientes para o período.</div>
-                    )}
-                </div>
-
-                <div className={styles.chartContainer}>
-                    <h4>Distribuição por Status</h4>
-                    {pieData.length > 0 && metrics.total_registrations > 0 ? (
-                        <div style={{ width: '100%', height: 300 }}>
+                        </Box>
+                    </Paper>
+                </Grid>
+                <Grid size={{ xs: 12, md: 4 }}>
+                    <Paper sx={{ p: 3, borderRadius: 4 }}>
+                        <Typography variant="h6" gutterBottom fontWeight={600}>Distribuição por Status</Typography>
+                        <Box sx={{ height: 300, width: '100%' }}>
                             <ResponsiveContainer>
                                 <PieChart>
                                     <Pie
@@ -214,52 +252,59 @@ export const Dashboard: React.FC = () => {
                                         paddingAngle={5}
                                         dataKey="value"
                                     >
-                                        {pieData.map((_, index) => (
-                                            <Cell key={`cell - ${index} `} fill={chartColors[index % chartColors.length]} />
+                                        {pieData.map((_entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
                                         ))}
                                     </Pie>
-                                    <Tooltip contentStyle={tooltipStyle} />
+                                    <Tooltip contentStyle={{ backgroundColor: muiTheme.palette.background.paper, borderRadius: 8, boxShadow: muiTheme.shadows[3], border: 'none', color: muiTheme.palette.text.primary }} />
                                 </PieChart>
                             </ResponsiveContainer>
-                        </div>
-                    ) : (
-                        <div className={styles.emptyChart}>Nenhum cadastro para exibir.</div>
-                    )}
-                </div>
-            </div>
+                        </Box>
+                    </Paper>
+                </Grid>
+            </Grid>
 
             {/* Recent Registrations Table */}
-            <div className={styles.tableSection}>
-                <h4>Solicitações Recentes</h4>
-                {professionals.length > 0 ? (
-                    <table className={styles.table}>
-                        <thead>
-                            <tr>
-                                <th>Nome</th>
-                                <th>CPF</th>
-                                <th>Data</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {professionals.slice(0, 5).map(prof => (
-                                <tr key={prof.id}>
-                                    <td>{prof.name}</td>
-                                    <td>{prof.cpf}</td>
-                                    <td>{new Date(prof.submission_date).toLocaleDateString()}</td>
-                                    <td>
-                                        <span className={`${styles.status} ${styles[prof.status.toLowerCase()]} `}>
-                                            {prof.status}
-                                        </span>
-                                    </td>
-                                </tr>
+            <Paper sx={{ p: 3, borderRadius: 4 }}>
+                <Typography variant="h6" gutterBottom fontWeight={600}>Solicitações Recentes</Typography>
+                <TableContainer>
+                    <Table>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>NOME</TableCell>
+                                <TableCell>CPF</TableCell>
+                                <TableCell>DATA</TableCell>
+                                <TableCell>STATUS</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {professionals.slice(0, 5).map((prof) => (
+                                <TableRow key={prof.id} hover>
+                                    <TableCell>{prof.name}</TableCell>
+                                    <TableCell>{prof.cpf}</TableCell>
+                                    <TableCell>{new Date(prof.submission_date).toLocaleDateString()}</TableCell>
+                                    <TableCell>
+                                        <Chip
+                                            label={prof.status}
+                                            size="small"
+                                            color={getStatusColor(prof.status) as any}
+                                            variant="outlined"
+                                            sx={{ fontWeight: 700 }}
+                                        />
+                                    </TableCell>
+                                </TableRow>
                             ))}
-                        </tbody>
-                    </table>
-                ) : (
-                    <p className={styles.emptyState}>Nenhuma solicitação encontrada.</p>
-                )}
-            </div>
-        </div>
+                            {professionals.length === 0 && (
+                                <TableRow>
+                                    <TableCell colSpan={4} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                                        Nenhuma solicitação encontrada.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </Paper>
+        </Container>
     );
 };

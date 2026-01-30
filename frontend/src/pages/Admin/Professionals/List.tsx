@@ -1,7 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+    Box,
+    Container,
+    Typography,
+    Button,
+    TextField,
+    MenuItem,
+    Paper,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Chip,
+    Stack,
+    CircularProgress,
+    InputAdornment
+} from '@mui/material';
+import { Search, FileSpreadsheet, Eye } from 'lucide-react';
 import api from '../../../services/api';
-import styles from './styles.module.css';
 
 interface Professional {
     id: string;
@@ -35,16 +54,11 @@ const ProfessionalsList: React.FC = () => {
     };
 
     useEffect(() => {
-        fetchProfessionals();
+        const timer = setTimeout(() => {
+            fetchProfessionals();
+        }, 500);
+        return () => clearTimeout(timer);
     }, [search, statusFilter]);
-
-    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearch(e.target.value);
-    };
-
-    const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setStatusFilter(e.target.value);
-    };
 
     const handleExport = async () => {
         try {
@@ -70,74 +84,123 @@ const ProfessionalsList: React.FC = () => {
         }
     };
 
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'APPROVED': return 'success';
+            case 'REJECTED': return 'error';
+            case 'ADJUSTMENT_REQUESTED': return 'info';
+            case 'PENDING': return 'warning';
+            default: return 'default';
+        }
+    };
+
     return (
-        <div className={styles.container}>
-            <div className={styles.header}>
-                <h2>Profissionais Cadastrados</h2>
-                <button onClick={handleExport} className={styles.exportBtn}>
-                    📊 Exportar Excel
-                </button>
-            </div>
+        <Container maxWidth="xl" sx={{ py: 4, animation: 'fadeIn 0.5s' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                <Typography variant="h4" fontWeight="bold">
+                    Profissionais Cadastrados
+                </Typography>
+                <Button
+                    variant="contained"
+                    color="success"
+                    startIcon={<FileSpreadsheet size={20} />}
+                    onClick={handleExport}
+                >
+                    Exportar Excel
+                </Button>
+            </Box>
 
-            <div className={styles.filters}>
-                <input
-                    type="text"
-                    placeholder="Buscar por nome, CPF, email..."
-                    value={search}
-                    onChange={handleSearchChange}
-                    className={styles.searchInput}
-                />
-                <select value={statusFilter} onChange={handleStatusChange} className={styles.selectInput}>
-                    <option value="">Todos os Status</option>
-                    <option value="PENDING">Pendente</option>
-                    <option value="APPROVED">Aprovado</option>
-                    <option value="REJECTED">Rejeitado</option>
-                    <option value="NEEDS_ADJUSTMENT">Requer Ajustes</option>
-                </select>
-            </div>
+            <Paper sx={{ p: 2, mb: 4, borderRadius: 2 }}>
+                <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                    <TextField
+                        fullWidth
+                        placeholder="Buscar por nome, CPF, email..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        size="small"
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <Search size={20} />
+                                </InputAdornment>
+                            ),
+                        }}
+                    />
+                    <TextField
+                        select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        size="small"
+                        sx={{ minWidth: 200 }}
+                        SelectProps={{ displayEmpty: true }}
+                    >
+                        <MenuItem value="">Todos os Status</MenuItem>
+                        <MenuItem value="PENDING">Pendente</MenuItem>
+                        <MenuItem value="APPROVED">Aprovado</MenuItem>
+                        <MenuItem value="REJECTED">Rejeitado</MenuItem>
+                        <MenuItem value="NEEDS_ADJUSTMENT">Requer Ajustes</MenuItem>
+                    </TextField>
+                </Stack>
+            </Paper>
 
-            {
-                loading ? (
-                    <div className={styles.loadingContainer}>
-                        <p>Carregando...</p>
-                    </div>
-                ) : (
-                    <table className={styles.table}>
-                        <thead>
-                            <tr>
-                                <th>Nome</th>
-                                <th>Formação</th>
-                                <th>Data Envio</th>
-                                <th>Status</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {professionals.map((prof) => (
-                                <tr key={prof.id}>
-                                    <td>{prof.name}</td>
-                                    <td>{prof.education}</td>
-                                    <td>{new Date(prof.submission_date).toLocaleDateString()}</td>
-                                    <td>
-                                        <span className={`${styles.statusBadge} ${styles[prof.status]}`}>
-                                            {prof.status}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <button
-                                            className={styles.actionButton}
-                                            onClick={() => navigate(`/admin/professionals/${prof.id}`)}
-                                        >
-                                            Detalhes
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )
-            }
-        </div >
+            <Paper sx={{ width: '100%', overflow: 'hidden', borderRadius: 2 }}>
+                <TableContainer>
+                    <Table>
+                        <TableHead>
+                            <TableRow sx={{ bgcolor: 'action.hover' }}>
+                                <TableCell sx={{ fontWeight: 600 }}>NOME</TableCell>
+                                <TableCell sx={{ fontWeight: 600 }}>FORMAÇÃO</TableCell>
+                                <TableCell sx={{ fontWeight: 600 }}>DATA ENVIO</TableCell>
+                                <TableCell sx={{ fontWeight: 600 }}>STATUS</TableCell>
+                                <TableCell sx={{ fontWeight: 600 }} align="right">AÇÕES</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {loading ? (
+                                <TableRow>
+                                    <TableCell colSpan={5} align="center" sx={{ py: 5 }}>
+                                        <CircularProgress />
+                                    </TableCell>
+                                </TableRow>
+                            ) : professionals.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={5} align="center" sx={{ py: 5, color: 'text.secondary' }}>
+                                        Nenhum profissional encontrado.
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                professionals.map((prof) => (
+                                    <TableRow key={prof.id} hover>
+                                        <TableCell sx={{ fontWeight: 500 }}>{prof.name}</TableCell>
+                                        <TableCell>{prof.education}</TableCell>
+                                        <TableCell>{new Date(prof.submission_date).toLocaleDateString()}</TableCell>
+                                        <TableCell>
+                                            <Chip
+                                                label={prof.status}
+                                                size="small"
+                                                color={getStatusColor(prof.status) as any}
+                                                variant="outlined"
+                                                sx={{ fontWeight: 700 }}
+                                            />
+                                        </TableCell>
+                                        <TableCell align="right">
+                                            <Button
+                                                variant="outlined"
+                                                size="small"
+                                                startIcon={<Eye size={16} />}
+                                                onClick={() => navigate(`/admin/professionals/${prof.id}`)}
+                                            >
+                                                Detalhes
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </Paper>
+        </Container>
     );
 };
 
