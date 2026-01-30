@@ -1,9 +1,8 @@
 import pytest
 from rest_framework.test import APIClient
 from rest_framework import status
-from django.contrib.auth.models import User
-from professionals.models import Professional
-from datetime import date
+from unittest.mock import patch, MagicMock
+from core.services.cnpj.interfaces import CNPJResult
 
 @pytest.mark.django_db
 class TestPFPJValidation:
@@ -28,7 +27,7 @@ class TestPFPJValidation:
             "council_number": "123456",
             "experience_years": 5,
             "consent_given": True,
-            "documents": [] # Skip docs for this test
+            "documents": [] 
         }
 
     def test_create_pf_success(self):
@@ -56,7 +55,6 @@ class TestPFPJValidation:
         assert 'cpf' in response.data
 
     def test_create_pf_with_cnpj_should_fail(self):
-        """Should fail if PF tries to send CNPJ"""
         data = {
             **self.base_data,
             "person_type": "PF",
@@ -67,8 +65,11 @@ class TestPFPJValidation:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert 'cnpj' in response.data
 
-    def test_create_pj_success(self):
-        """Should create PJ with CNPJ successfully"""
+    @patch('core.services.cnpj.service.CNPJService.validate_cnpj')
+    def test_create_pj_success(self, mock_validate):
+        """Should create PJ with CNPJ successfully (Mocked Service)"""
+        mock_validate.return_value = CNPJResult(valid=True, status='ATIVA', message='OK')
+        
         data = {
             **self.base_data,
             "person_type": "PJ",
@@ -84,7 +85,6 @@ class TestPFPJValidation:
         assert response.data['cpf'] is None
 
     def test_create_pj_missing_cnpj(self):
-        """Should fail creating PJ without CNPJ"""
         data = {
             **self.base_data,
             "person_type": "PJ",
@@ -95,7 +95,6 @@ class TestPFPJValidation:
         assert 'cnpj' in response.data
 
     def test_create_pj_with_cpf_should_fail(self):
-        """Should fail if PJ tries to send CPF in main field"""
         data = {
             **self.base_data,
             "person_type": "PJ",

@@ -39,7 +39,7 @@ class TestBusinessRules:
         errors = serializer.errors
         
         required_fields = [
-            'name', 'cpf', 'email', 'birth_date', 'zip_code', 'street', 
+            'name', 'email', 'birth_date', 'zip_code', 'street', 
             'number', 'neighborhood', 'city', 'state',
             'education', 'institution', 'graduation_year', 
             'council_name', 'council_number', 

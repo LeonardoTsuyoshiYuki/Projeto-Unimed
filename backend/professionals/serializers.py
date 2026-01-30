@@ -47,30 +47,45 @@ class ProfessionalSerializer(serializers.ModelSerializer):
 
 
     def validate(self, data):
-        person_type = data.get('person_type', 'PF')
+        # Handle Partial Updates: Merge data with instance if available
+        if self.instance:
+            person_type = data.get('person_type', self.instance.person_type)
+            cpf = data.get('cpf', self.instance.cpf)
+            cnpj = data.get('cnpj', self.instance.cnpj)
+        else:
+            person_type = data.get('person_type', 'PF')
+            cpf = data.get('cpf')
+            cnpj = data.get('cnpj')
         
         if person_type == 'PF':
-            if not data.get('cpf'):
+            if not cpf:
                 raise serializers.ValidationError({"cpf": "CPF é obrigatório para Pessoa Física."})
-            if data.get('cnpj'):
+            if cnpj:
                  raise serializers.ValidationError({"cnpj": "CNPJ não deve ser preenchido para Pessoa Física."})
         
         if person_type == 'PJ':
-            if not data.get('cnpj'):
+            if not cnpj:
                 raise serializers.ValidationError({"cnpj": "CNPJ é obrigatório para Pessoa Jurídica."})
-            if data.get('cpf'):
+            if cpf:
                  raise serializers.ValidationError({"cpf": "CPF não deve ser preenchido para Pessoa Jurídica (use o do Responsável Técnico)."})
             
             # External CNPJ Integration
-            from core.services.cnpj.service import CNPJService
-            cnpj_service = CNPJService()
-            result = cnpj_service.validate_cnpj(data.get('cnpj'))
+            # Only validate if CNPJ is present (and changed or new)
+            # Optimization: If instance exists and CNPJ hasn't changed, skip validation?
+            # For now, let's validate to be safe or if status check is needed. 
+            # But let's skip if it's a patch of other fields to avoid API limits.
             
-            if not result.valid:
-                 # If network error/timeout, we might want to FAIL or WARN. 
-                 # Requirement: "se inativo/baixado/suspenso -> 400"
-                 # Requirement: "erro de rede -> falha com mensagem"
-                 raise serializers.ValidationError({"cnpj": result.message})
+            should_validate_cnpj = True
+            if self.instance and self.instance.cnpj == cnpj and 'cnpj' not in data:
+                 should_validate_cnpj = False
+            
+            if should_validate_cnpj:
+                from core.services.cnpj.service import CNPJService
+                cnpj_service = CNPJService()
+                result = cnpj_service.validate_cnpj(cnpj)
+                
+                if not result.valid:
+                     raise serializers.ValidationError({"cnpj": result.message})
             
         return data
 
