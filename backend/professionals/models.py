@@ -33,9 +33,24 @@ class Professional(models.Model):
         ('ADJUSTMENT_REQUESTED', 'Ajuste Solicitado'),
     ]
 
+    PERSON_TYPE_CHOICES = [
+        ('PF', 'Pessoa Física'),
+        ('PJ', 'Pessoa Jurídica'),
+    ]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=255)
-    cpf = models.CharField(max_length=11, db_index=True)
+    person_type = models.CharField(max_length=2, choices=PERSON_TYPE_CHOICES, default='PF')
+    name = models.CharField(max_length=255) # Razão Social if PJ
+    
+    # Conditional Identifiers
+    cpf = models.CharField(max_length=11, db_index=True, null=True, blank=True)
+    cnpj = models.CharField(max_length=14, db_index=True, null=True, blank=True)
+    
+    # PJ-specific fields
+    company_name = models.CharField(max_length=255, null=True, blank=True) # Nome Fantasia
+    technical_manager_name = models.CharField(max_length=255, null=True, blank=True)
+    technical_manager_cpf = models.CharField(max_length=11, null=True, blank=True)
+
     email = models.EmailField()
     phone = models.CharField(max_length=20)
     

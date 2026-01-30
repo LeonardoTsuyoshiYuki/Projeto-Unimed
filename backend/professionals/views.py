@@ -278,8 +278,9 @@ class DocumentViewSet(viewsets.ModelViewSet):
         document = self.get_object()
         if not document.file:
             return Response({"error": "File not found"}, status=status.HTTP_404_NOT_FOUND)
-        
-        from django.http import FileResponse
-        response = FileResponse(document.file.open('rb'))
-        response['Content-Disposition'] = f'attachment; filename="{document.file.name.split("/")[-1]}"'
-        return response
+            
+        # Redirect to Presigned URL (S3) or Local URL
+        # This offloads the file serving to S3, reducing server load.
+        # Security: The URL is signed and temporary (AWS_QUERYSTRING_AUTH=True).
+        from django.shortcuts import redirect
+        return redirect(document.file.url)

@@ -94,5 +94,5 @@ class TestSecurityHardening:
         doc = Document.objects.create(professional=prof, description="Test", file=file)
         
         response = self.client.get(f'/api/documents/{doc.id}/download/')
-        assert response.status_code == status.HTTP_200_OK
-        assert 'Content-Disposition' in response.headers
+        assert response.status_code == status.HTTP_302_FOUND
+        assert 'Location' in response.headers

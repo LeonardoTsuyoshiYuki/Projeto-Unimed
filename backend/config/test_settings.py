@@ -10,6 +10,9 @@ EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 
 # Disable scaling or complex logic if present
 DEBUG = False
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
 
 # Use SQLite for tests to avoid Postgres dependency
 DATABASES = {

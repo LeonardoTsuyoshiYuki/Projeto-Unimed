@@ -23,7 +23,9 @@ class ProfessionalSerializer(serializers.ModelSerializer):
     class Meta:
         model = Professional
         fields = [
-            'id', 'name', 'cpf', 'email', 'phone',
+            'id', 'person_type', 'name', 'cpf', 'cnpj', 
+            'company_name', 'technical_manager_name', 'technical_manager_cpf',
+            'email', 'phone',
             'birth_date', 'zip_code', 'street', 'number', 'complement', 'neighborhood', 'city', 'state',
             'education', 'institution', 'graduation_year', 
             'council_name', 'council_number', 'experience_years', 'area_of_action',
@@ -44,8 +46,27 @@ class ProfessionalSerializer(serializers.ModelSerializer):
         return value
 
 
+    def validate(self, data):
+        person_type = data.get('person_type', 'PF')
+        
+        if person_type == 'PF':
+            if not data.get('cpf'):
+                raise serializers.ValidationError({"cpf": "CPF é obrigatório para Pessoa Física."})
+            if data.get('cnpj'):
+                 raise serializers.ValidationError({"cnpj": "CNPJ não deve ser preenchido para Pessoa Física."})
+        
+        elif person_type == 'PJ':
+            if not data.get('cnpj'):
+                raise serializers.ValidationError({"cnpj": "CNPJ é obrigatório para Pessoa Jurídica."})
+            if data.get('cpf'):
+                 raise serializers.ValidationError({"cpf": "CPF não deve ser preenchido para Pessoa Jurídica (use o do Responsável Técnico)."})
+            
+        return data
+
     def validate_cpf(self, value):
-        # Check 90 days rule
+        if not value:
+            return value
+        # Check 90 days rule for CPF (PF only)
         ninety_days_ago = timezone.now() - timedelta(days=90)
         recent_submission = Professional.objects.filter(
             cpf=value, 
@@ -59,6 +80,16 @@ class ProfessionalSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         if validated_data.get('consent_given'):
             validated_data['consent_date'] = timezone.now()
+        
+        # Enforce Nulled fields based on Type to keep DB clean
+        if validated_data.get('person_type') == 'PF':
+            validated_data['cnpj'] = None
+            validated_data['company_name'] = None
+            validated_data['technical_manager_name'] = None
+            validated_data['technical_manager_cpf'] = None
+        elif validated_data.get('person_type') == 'PJ':
+            validated_data['cpf'] = None
+
         return super().create(validated_data)
 
 class ProfessionalManagementSerializer(ProfessionalSerializer):
