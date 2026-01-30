@@ -55,11 +55,22 @@ class ProfessionalSerializer(serializers.ModelSerializer):
             if data.get('cnpj'):
                  raise serializers.ValidationError({"cnpj": "CNPJ não deve ser preenchido para Pessoa Física."})
         
-        elif person_type == 'PJ':
+        if person_type == 'PJ':
             if not data.get('cnpj'):
                 raise serializers.ValidationError({"cnpj": "CNPJ é obrigatório para Pessoa Jurídica."})
             if data.get('cpf'):
                  raise serializers.ValidationError({"cpf": "CPF não deve ser preenchido para Pessoa Jurídica (use o do Responsável Técnico)."})
+            
+            # External CNPJ Integration
+            from core.services.cnpj.service import CNPJService
+            cnpj_service = CNPJService()
+            result = cnpj_service.validate_cnpj(data.get('cnpj'))
+            
+            if not result.valid:
+                 # If network error/timeout, we might want to FAIL or WARN. 
+                 # Requirement: "se inativo/baixado/suspenso -> 400"
+                 # Requirement: "erro de rede -> falha com mensagem"
+                 raise serializers.ValidationError({"cnpj": result.message})
             
         return data
 
