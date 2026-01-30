@@ -93,8 +93,8 @@ const ProfessionalDetail: React.FC = () => {
             if (!id) return;
             try {
                 const [profRes, logsRes] = await Promise.all([
-                    api.get(`/professionals/${id}/`),
-                    api.get(`/professionals/${id}/history/`)
+                    api.get(`/api/professionals/${id}/`),
+                    api.get(`/api/professionals/${id}/history/`)
                 ]);
                 setProfessional(profRes.data);
                 setNotes(profRes.data.internal_notes || '');
@@ -114,9 +114,9 @@ const ProfessionalDetail: React.FC = () => {
         if (!professional) return;
         setSavingNotes(true);
         try {
-            await api.patch(`/professionals/${professional.id}/`, { internal_notes: notes });
+            await api.patch(`/api/professionals/${professional.id}/`, { internal_notes: notes });
             alert("Observações salvas!");
-            const logsRes = await api.get(`/professionals/${id}/history/`);
+            const logsRes = await api.get(`/api/professionals/${id}/history/`);
             setAuditLogs(logsRes.data);
         } catch (error) {
             console.error(error);
@@ -131,10 +131,10 @@ const ProfessionalDetail: React.FC = () => {
         if (!window.confirm(`Tem certeza que deseja mudar o status para ${newStatus}?`)) return;
 
         try {
-            await api.patch(`/professionals/${professional.id}/`, { status: newStatus });
+            await api.patch(`/api/professionals/${professional.id}/`, { status: newStatus });
             const [profRes, logsRes] = await Promise.all([
-                api.get(`/professionals/${id}/`),
-                api.get(`/professionals/${id}/history/`)
+                api.get(`/api/professionals/${id}/`),
+                api.get(`/api/professionals/${id}/history/`)
             ]);
             setProfessional(profRes.data);
             setAuditLogs(logsRes.data);

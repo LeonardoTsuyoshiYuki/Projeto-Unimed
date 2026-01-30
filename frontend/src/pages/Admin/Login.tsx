@@ -29,7 +29,7 @@ export const Login: React.FC = () => {
         setError('');
 
         try {
-            const response = await api.post('/token/', { username, password });
+            const response = await api.post('/api/token/', { username, password });
             login(response.data.access);
             navigate('/admin/dashboard');
         } catch (err) {

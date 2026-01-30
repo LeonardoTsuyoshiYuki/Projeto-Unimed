@@ -65,8 +65,8 @@ export const Dashboard: React.FC = () => {
         setError(null);
         try {
             const [metricsRes, listRes] = await Promise.all([
-                api.get('/admin/dashboard/'),
-                api.get('/professionals/')
+                api.get('/api/admin/dashboard/'),
+                api.get('/api/professionals/')
             ]);
             setMetrics(metricsRes.data);
             setProfessionals(listRes.data.results || listRes.data);

@@ -44,7 +44,7 @@ const ProfessionalsList: React.FC = () => {
             if (search) params.search = search;
             if (statusFilter) params.status = statusFilter;
 
-            const response = await api.get('/professionals/', { params });
+            const response = await api.get('/api/professionals/', { params });
             setProfessionals(response.data.results || response.data);
         } catch (error) {
             console.error('Error fetching professionals:', error);
@@ -66,7 +66,7 @@ const ProfessionalsList: React.FC = () => {
             if (search) params.search = search;
             if (statusFilter) params.status = statusFilter;
 
-            const response = await api.get('/professionals/export_excel/', {
+            const response = await api.get('/api/professionals/export_excel/', {
                 params,
                 responseType: 'blob'
             });
