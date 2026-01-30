@@ -77,3 +77,36 @@ def test_email_view(request):
     status_code = 200 if result.success else 500
     
     return Response(response_data, status=status_code)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def validate_cnpj_view(request):
+    """
+    Public endpoint to validate CNPJ status before form submission.
+    Query Param: ?cnpj=00000000000000
+    """
+    cnpj = request.query_params.get('cnpj')
+    
+    if not cnpj:
+        return Response({
+            "valid": False,
+            "status": "MISSING_PARAM",
+            "message": "Parâmetro 'cnpj' é obrigatório."
+        }, status=400)
+        
+    from .services.cnpj.service import CNPJService
+    
+    # Instantiate service (uses default provider)
+    service = CNPJService()
+    result = service.validate_cnpj(cnpj)
+    
+    # We return 200 even for invalid CNPJs because the request itself was successful,
+    # and the validity is part of the payload. 
+    # Unless it's a structural error (like missing param).
+    # However, for easier frontend logic, we can keep it 200 and trust the 'valid' flag.
+    
+    return Response({
+        "valid": result.valid,
+        "status": result.status,
+        "message": result.message
+    })
