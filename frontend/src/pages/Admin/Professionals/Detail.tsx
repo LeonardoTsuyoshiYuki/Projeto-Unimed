@@ -419,7 +419,22 @@ const ProfessionalDetail: React.FC = () => {
                                                     {formatFileSize(doc.file_size)}
                                                 </Typography>
                                             </Box>
-                                            <IconButton size="small" onClick={() => {/* Download logic */ }}>
+                                            <IconButton
+                                                size="small"
+                                                onClick={async () => {
+                                                    try {
+                                                        const response = await api.get(`/api/documents/${doc.id}/download/`);
+                                                        if (response.data.url) {
+                                                            window.open(response.data.url, '_blank', 'noopener,noreferrer');
+                                                        } else {
+                                                            alert("URL de download não encontrada.");
+                                                        }
+                                                    } catch (error) {
+                                                        console.error("Erro ao baixar documento", error);
+                                                        alert("Erro ao baixar documento.");
+                                                    }
+                                                }}
+                                            >
                                                 <Download size={18} />
                                             </IconButton>
                                         </Paper>

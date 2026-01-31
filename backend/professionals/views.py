@@ -328,8 +328,6 @@ class DocumentViewSet(viewsets.ModelViewSet):
         if not document.file:
             return Response({"error": "File not found"}, status=status.HTTP_404_NOT_FOUND)
             
-        # Redirect to Presigned URL (S3) or Local URL
-        # This offloads the file serving to S3, reducing server load.
-        # Security: The URL is signed and temporary (AWS_QUERYSTRING_AUTH=True).
-        from django.shortcuts import redirect
-        return redirect(document.file.url)
+        # Return URL JSON. Frontend handles the redirection/download.
+        # This keeps headers and auth logic clean.
+        return Response({"url": document.file.url})
