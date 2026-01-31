@@ -384,26 +384,80 @@ export const Register: React.FC = () => {
                         Endereço
                     </Typography>
                     <Grid container spacing={2}>
-                        <Grid size={{ xs: 12, sm: 4 }}>
-                            <TextField fullWidth label="CEP" placeholder="00000000" inputProps={{ maxLength: 8 }} {...register('zip_code')} onBlur={handleCepBlur} error={!!errors.zip_code} helperText={errors.zip_code?.message} />
+                        <Grid size={{ xs: 12, sm: 3 }}>
+                            <TextField
+                                fullWidth
+                                label="CEP"
+                                placeholder="00000000"
+                                inputProps={{ maxLength: 8 }}
+                                {...register('zip_code')}
+                                onBlur={handleCepBlur}
+                                error={!!errors.zip_code}
+                                helperText={errors.zip_code?.message}
+                                InputLabelProps={{ shrink: !!watch('zip_code') || undefined }}
+                            />
                         </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                            <TextField fullWidth label="Cidade" InputProps={{ readOnly: true }} {...register('city')} error={!!errors.city} helperText={errors.city?.message} />
+                        <Grid size={{ xs: 12, sm: 7 }}>
+                            <TextField
+                                fullWidth
+                                label="Cidade"
+                                {...register('city')}
+                                error={!!errors.city}
+                                helperText={errors.city?.message}
+                                InputProps={{ readOnly: true }}
+                                InputLabelProps={{ shrink: !!watch('city') || undefined }}
+                            />
                         </Grid>
                         <Grid size={{ xs: 12, sm: 2 }}>
-                            <TextField fullWidth label="UF" InputProps={{ readOnly: true }} {...register('state')} error={!!errors.state} helperText={errors.state?.message} />
+                            <TextField
+                                fullWidth
+                                label="UF"
+                                {...register('state')}
+                                error={!!errors.state}
+                                helperText={errors.state?.message}
+                                InputProps={{ readOnly: true }}
+                                InputLabelProps={{ shrink: !!watch('state') || undefined }}
+                            />
                         </Grid>
                         <Grid size={{ xs: 12, sm: 9 }}>
-                            <TextField fullWidth label="Logradouro" InputProps={{ readOnly: true }} {...register('street')} error={!!errors.street} helperText={errors.street?.message} />
+                            <TextField
+                                fullWidth
+                                label="Logradouro"
+                                {...register('street')}
+                                error={!!errors.street}
+                                helperText={errors.street?.message}
+                                InputProps={{ readOnly: true }}
+                                InputLabelProps={{ shrink: !!watch('street') || undefined }}
+                            />
                         </Grid>
                         <Grid size={{ xs: 12, sm: 3 }}>
-                            <TextField fullWidth label="Número" {...register('number')} error={!!errors.number} helperText={errors.number?.message} />
+                            <TextField
+                                fullWidth
+                                label="Número"
+                                {...register('number')}
+                                error={!!errors.number}
+                                helperText={errors.number?.message}
+                                InputLabelProps={{ shrink: !!watch('number') || undefined }}
+                            />
                         </Grid>
                         <Grid size={{ xs: 12, sm: 6 }}>
-                            <TextField fullWidth label="Bairro" InputProps={{ readOnly: true }} {...register('neighborhood')} error={!!errors.neighborhood} helperText={errors.neighborhood?.message} />
+                            <TextField
+                                fullWidth
+                                label="Bairro"
+                                {...register('neighborhood')}
+                                error={!!errors.neighborhood}
+                                helperText={errors.neighborhood?.message}
+                                InputProps={{ readOnly: true }}
+                                InputLabelProps={{ shrink: !!watch('neighborhood') || undefined }}
+                            />
                         </Grid>
                         <Grid size={{ xs: 12, sm: 6 }}>
-                            <TextField fullWidth label="Complemento" {...register('complement')} />
+                            <TextField
+                                fullWidth
+                                label="Complemento"
+                                {...register('complement')}
+                                InputLabelProps={{ shrink: !!watch('complement') || undefined }}
+                            />
                         </Grid>
                     </Grid>
 
@@ -412,7 +466,15 @@ export const Register: React.FC = () => {
                     </Typography>
                     <Grid container spacing={2}>
                         <Grid size={{ xs: 12 }}>
-                            <TextField select fullWidth label="Formação Acadêmica" defaultValue="" {...register('education')} error={!!errors.education} helperText={errors.education?.message}>
+                            <TextField
+                                select
+                                fullWidth
+                                label="Formação Acadêmica"
+                                defaultValue=""
+                                {...register('education')}
+                                error={!!errors.education}
+                                helperText={errors.education?.message}
+                            >
                                 {educationOptions.map((option) => (
                                     <MenuItem key={option} value={option}>{option}</MenuItem>
                                 ))}
@@ -420,7 +482,14 @@ export const Register: React.FC = () => {
                         </Grid>
                         {selectedEducation === 'Outros' && (
                             <Grid size={{ xs: 12 }}>
-                                <TextField fullWidth label="Qual sua formação?" placeholder="Digite sua formação" {...register('custom_education')} error={!!errors.custom_education} helperText={errors.custom_education?.message} />
+                                <TextField
+                                    fullWidth
+                                    label="Qual sua formação?"
+                                    placeholder="Digite sua formação"
+                                    {...register('custom_education')}
+                                    error={!!errors.custom_education}
+                                    helperText={errors.custom_education?.message}
+                                />
                             </Grid>
                         )}
                         <Grid size={{ xs: 12, sm: 8 }}>
