@@ -155,11 +155,18 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
         worksheet = workbook.active
         worksheet.title = 'Profissionais'
 
+        # Strategy A: Universal columns + Specific columns
         columns = [
-            'Nome', 'CPF', 'Email', 'Telefone', 'Data Nascimento',
-            'Formação', 'Instituição', 'Ano Formação',
+            'Data Envio', 'Status', 'Tipo', 
+            'Nome / Razão Social', 'Nome Fantasia', 
+            'CPF', 'CNPJ', 
+            'Data Nascimento / Abertura', 
+            'Nome Resp. Técnico', 'CPF Resp. Técnico',
+            'Email', 'Telefone', 
+            'CEP', 'Logradouro', 'Número', 'Complemento', 'Bairro', 'Cidade', 'UF',
+            'Formação', 'Instituição', 'Ano Conclusão',
             'Conselho', 'Nº Conselho', 'Área Atuação', 'Experiência (anos)',
-            'Status', 'Data Envio', 'Data Aprovação/Reprovação', 'Responsável Análise'
+            'Data Aprovação/Reprovação', 'Responsável Análise'
         ]
 
         worksheet.append(columns)
@@ -171,25 +178,50 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
             reviewer = prof.approved_by or prof.rejected_by
             reviewer_name = reviewer.username if reviewer else '-'
             
+            # Format dates
+            submission_date_str = prof.submission_date.strftime('%d/%m/%Y %H:%M') if prof.submission_date else '-'
+            approval_date_str = approval_date.strftime('%d/%m/%Y %H:%M') if approval_date else '-'
+            birth_date_str = prof.birth_date.strftime('%d/%m/%Y') if prof.birth_date else '-'
+
+            # Determine fields based on type
+            is_pj = prof.person_type == 'PJ'
+            
             row = [
+                submission_date_str,
+                prof.get_status_display(),
+                prof.get_person_type_display(), # PF or PJ
                 prof.name,
-                prof.cpf,
+                prof.company_name if is_pj else '-',
+                prof.cpf if not is_pj else '-',
+                prof.cnpj if is_pj else '-',
+                birth_date_str,
+                prof.technical_manager_name if is_pj else '-',
+                prof.technical_manager_cpf if is_pj else '-',
                 prof.email,
                 prof.phone,
-                prof.birth_date,
+                prof.zip_code,
+                prof.street,
+                prof.number,
+                prof.complement or '-',
+                prof.neighborhood,
+                prof.city,
+                prof.state,
                 prof.education,
                 prof.institution,
                 prof.graduation_year,
                 prof.council_name,
                 prof.council_number,
-                prof.area_of_action,
+                prof.area_of_action or '-',
                 prof.experience_years,
-                prof.get_status_display(),
-                prof.submission_date.strftime('%d/%m/%Y %H:%M') if prof.submission_date else '-',
-                approval_date.strftime('%d/%m/%Y %H:%M') if approval_date else '-',
+                approval_date_str,
                 reviewer_name
             ]
             worksheet.append(row)
+
+        # Adjust column widths (auto-size rough approximation)
+        for column_cells in worksheet.columns:
+            length = max(len(str(cell.value) or "") for cell in column_cells)
+            worksheet.column_dimensions[column_cells[0].column_letter].width = length + 2
 
         workbook.save(response)
         return response
