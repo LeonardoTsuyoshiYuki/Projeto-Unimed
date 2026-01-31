@@ -1,13 +1,20 @@
 import pytest
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.test import APIClient
+from django.contrib.auth.models import User
 from professionals.models import Professional
 import openpyxl
 from io import BytesIO
 
 @pytest.mark.django_db
 class TestExportExcel:
-    def test_export_excel_admin_access(self, admin_client):
+    def setup_method(self):
+        self.client = APIClient()
+        self.admin_user = User.objects.create_superuser('admin', 'admin@test.com', 'password')
+        self.client.force_authenticate(user=self.admin_user)
+
+    def test_export_excel_admin_access(self):
         """
         Test that admin can export excel and it contains correct headers and rows.
         """
@@ -60,7 +67,7 @@ class TestExportExcel:
 
         url = reverse('professional-export-excel') 
         
-        response = admin_client.get(url)
+        response = self.client.get(url)
         assert response.status_code == status.HTTP_200_OK
         assert response['Content-Type'] == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         
@@ -100,7 +107,53 @@ class TestExportExcel:
         assert pj_row[6] == pj.cnpj
         assert pj_row[4] == 'Nome Fantasia PJ'
 
-    def test_export_excel_denied_for_anon(self, client):
+    def test_export_individual_excel_admin_access(self):
+        """
+        Test that admin can export excel for a single professional.
+        """
+        from datetime import date
+        pf = Professional.objects.create(
+            person_type='PF',
+            name='Maria Individual',
+            cpf='11122233344',
+            email='maria@test.com',
+            phone='11999998888',
+            birth_date=date(1995, 5, 5),
+            zip_code='12345678',
+            street='Rua Ind',
+            number='55',
+            neighborhood='Bairro Ind',
+            city='Cidade Ind',
+            state='SP',
+            education='Médico',
+            institution='USP',
+            graduation_year=2020,
+            council_name='CRM',
+            council_number='999',
+            experience_years=3
+        )
+
+        url = reverse('professional-export-individual-excel', args=[pf.id])
+        
+        response = self.client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response['Content-Type'] == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        assert f'prestador_Maria_Individual_{pf.cpf}_' in response['Content-Disposition']
+        
+        # Load workbook
+        wb = openpyxl.load_workbook(BytesIO(response.content))
+        ws = wb.active
+        
+        # Verify rows count (header + 1 pro)
+        assert ws.max_row == 2
+        
+        rows = list(ws.iter_rows(min_row=2, values_only=True))
+        assert len(rows) == 1
+        assert rows[0][3] == pf.name
+        assert rows[0][5] == pf.cpf
+
+    def test_export_excel_denied_for_anon(self):
+        self.client.force_authenticate(user=None)
         url = reverse('professional-export-excel')
-        response = client.get(url)
+        response = self.client.get(url)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
