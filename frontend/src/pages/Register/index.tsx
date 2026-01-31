@@ -19,10 +19,10 @@ import {
     RadioGroup,
     Radio,
     FormControl,
-    FormLabel,
     InputAdornment,
     IconButton,
-    Grid
+    Grid,
+    Stack
 } from '@mui/material';
 import { Upload, CheckCircle, AlertCircle, Search, Check, AlertTriangle } from 'lucide-react';
 import { publicApi } from '../../services/api';
@@ -280,24 +280,39 @@ export const Register: React.FC = () => {
 
                 <Box component="form" onSubmit={handleSubmit(onSubmit)}>
 
-                    <Box sx={{ mb: 4, p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
-                        <FormControl component="fieldset" fullWidth>
-                            <FormLabel component="legend" sx={{ mb: 1, fontWeight: 'bold' }}>Tipo de Cadastro</FormLabel>
-                            <Controller
-                                rules={{ required: true }}
-                                control={control}
-                                name="person_type"
-                                render={({ field }) => (
-                                    <RadioGroup {...field} row>
-                                        <FormControlLabel value="PF" control={<Radio />} label="Pessoa Física (Profissional Liberal)" />
-                                        <FormControlLabel value="PJ" control={<Radio />} label="Pessoa Jurídica (Clínica/Empresa)" />
-                                    </RadioGroup>
-                                )}
-                            />
-                        </FormControl>
-                    </Box>
+                    <Stack spacing={2}>
+                        <Typography variant="h6" fontWeight={600} gutterBottom sx={{ borderBottom: 1, borderColor: 'divider', pb: 1 }}>
+                            Tipo de Cadastro
+                        </Typography>
 
-                    <Typography variant="h6" fontWeight={600} gutterBottom sx={{ mt: 2, borderBottom: 1, borderColor: 'divider', pb: 1 }}>
+                        <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
+                            <FormControl component="fieldset" fullWidth>
+                                <Controller
+                                    rules={{ required: true }}
+                                    control={control}
+                                    name="person_type"
+                                    render={({ field }) => (
+                                        <RadioGroup {...field} row>
+                                            <FormControlLabel
+                                                value="PF"
+                                                control={<Radio />}
+                                                label="Pessoa Física (Profissional Liberal)"
+                                                sx={{ mr: { xs: 0, sm: 4 }, mb: { xs: 1, sm: 0 } }}
+                                            />
+                                            <FormControlLabel
+                                                value="PJ"
+                                                control={<Radio />}
+                                                label="Pessoa Jurídica (Clínica/Empresa)"
+                                            />
+                                        </RadioGroup>
+                                    )}
+                                />
+                            </FormControl>
+                        </Paper>
+                    </Stack>
+
+
+                    <Typography variant="h6" fontWeight={600} gutterBottom sx={{ mt: 4, borderBottom: 1, borderColor: 'divider', pb: 1 }}>
                         Dados {personType === 'PJ' ? 'da Empresa' : 'Pessoais'}
                     </Typography>
 
