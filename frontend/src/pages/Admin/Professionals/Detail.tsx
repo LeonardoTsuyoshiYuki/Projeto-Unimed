@@ -76,6 +76,11 @@ interface Professional {
     submission_date: string;
     documents: Document[];
     internal_notes?: string;
+    person_type?: 'PF' | 'PJ';
+    cnpj?: string;
+    company_name?: string;
+    technical_manager_name?: string;
+    technical_manager_cpf?: string;
 }
 
 const InfoItem = ({ label, value }: { label: string; value: string | number | undefined }) => (
@@ -177,6 +182,8 @@ const ProfessionalDetail: React.FC = () => {
     if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', p: 8 }}><CircularProgress /></Box>;
     if (!professional) return <Box sx={{ p: 4, textAlign: 'center' }}><Typography>Profissional não encontrado.</Typography></Box>;
 
+    const isPJ = professional.person_type === 'PJ';
+
     return (
         <Container maxWidth="xl" sx={{ py: 4, animation: 'fadeIn 0.5s' }}>
             {/* Header */}
@@ -184,14 +191,20 @@ const ProfessionalDetail: React.FC = () => {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
                     <Box>
                         <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 1 }}>
-                            <Avatar sx={{ bgcolor: 'primary.main', width: 56, height: 56 }}>{professional.name.charAt(0)}</Avatar>
+                            <Avatar sx={{ bgcolor: 'primary.main', width: 56, height: 56 }}>
+                                {professional.name?.charAt(0) || (professional.company_name?.charAt(0))}
+                            </Avatar>
                             <Box>
-                                <Typography variant="h4" fontWeight={700}>{professional.name}</Typography>
-                                <Typography variant="body2" color="text.secondary">CPF: {professional.cpf} • Cadastro: {new Date(professional.submission_date).toLocaleDateString()}</Typography>
+                                <Typography variant="h4" fontWeight={700}>
+                                    {isPJ ? professional.name : professional.name} {/* name is often Razao Social in PJ context if mapped, but lets stick to fields */}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    {isPJ ? `CNPJ: ${professional.cnpj}` : `CPF: ${professional.cpf}`} • Cadastro: {new Date(professional.submission_date).toLocaleDateString()}
+                                </Typography>
                             </Box>
                         </Stack>
                         <Chip
-                            label={professional.status}
+                            label={professional.status === 'NEEDS_ADJUSTMENT' ? 'AGUARDANDO AJUSTES' : professional.status}
                             color={getStatusColor(professional.status) as any}
                             sx={{ fontWeight: 700, mt: 1 }}
                         />
@@ -223,33 +236,66 @@ const ProfessionalDetail: React.FC = () => {
             </Paper>
 
             <Grid container spacing={3}>
-                {/* Personal Info */}
+                {/* Main Identity Info */}
                 <Grid size={{ xs: 12, md: 6 }}>
                     <Card sx={{ height: '100%' }}>
                         <CardHeader
                             avatar={<Avatar sx={{ bgcolor: 'primary.light', color: 'primary.main' }}><User size={20} /></Avatar>}
-                            title={<Typography variant="h6" fontWeight={600}>Dados Pessoais</Typography>}
+                            title={<Typography variant="h6" fontWeight={600}>{isPJ ? 'Dados da Empresa' : 'Dados Pessoais'}</Typography>}
                         />
                         <Divider />
                         <CardContent>
                             <Grid container spacing={3}>
-                                <Grid size={{ xs: 12, sm: 6 }}>
-                                    <InfoItem label="E-mail" value={professional.email} />
-                                </Grid>
-                                <Grid size={{ xs: 12, sm: 6 }}>
-                                    <InfoItem label="Telefone" value={professional.phone} />
-                                </Grid>
-                                <Grid size={{ xs: 12, sm: 6 }}>
-                                    <InfoItem label="CPF" value={professional.cpf} />
-                                </Grid>
-                                <Grid size={{ xs: 12, sm: 6 }}>
-                                    <InfoItem label="Nascimento" value={new Date(professional.birth_date).toLocaleDateString()} />
-                                </Grid>
+                                {isPJ ? (
+                                    <>
+                                        <Grid size={{ xs: 12 }}>
+                                            <InfoItem label="Razão Social" value={professional.name} />
+                                        </Grid>
+                                        <Grid size={{ xs: 12, sm: 6 }}>
+                                            <InfoItem label="Nome Fantasia" value={professional.company_name} />
+                                        </Grid>
+                                        <Grid size={{ xs: 12, sm: 6 }}>
+                                            <InfoItem label="CNPJ" value={professional.cnpj} />
+                                        </Grid>
+                                        <Grid size={{ xs: 12, sm: 6 }}>
+                                            <InfoItem label="Email Institucional" value={professional.email} />
+                                        </Grid>
+                                        <Grid size={{ xs: 12, sm: 6 }}>
+                                            <InfoItem label="Telefone" value={professional.phone} />
+                                        </Grid>
+                                        <Grid size={{ xs: 12, sm: 6 }}>
+                                            <InfoItem label="Data de Abertura" value={new Date(professional.birth_date).toLocaleDateString()} />
+                                        </Grid>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Grid size={{ xs: 12, sm: 6 }}>
+                                            <InfoItem label="Nome Completo" value={professional.name} />
+                                        </Grid>
+                                        <Grid size={{ xs: 12, sm: 6 }}>
+                                            <InfoItem label="CPF" value={professional.cpf} />
+                                        </Grid>
+                                        <Grid size={{ xs: 12, sm: 6 }}>
+                                            <InfoItem label="Email" value={professional.email} />
+                                        </Grid>
+                                        <Grid size={{ xs: 12, sm: 6 }}>
+                                            <InfoItem label="Telefone" value={professional.phone} />
+                                        </Grid>
+                                        <Grid size={{ xs: 12, sm: 6 }}>
+                                            <InfoItem label="Data de Nascimento" value={new Date(professional.birth_date).toLocaleDateString()} />
+                                        </Grid>
+                                    </>
+                                )}
+
                                 <Grid size={{ xs: 12 }}>
                                     <Divider sx={{ my: 1 }} />
+                                    <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ display: 'block', mb: 2, mt: 1 }}>
+                                        ENDEREÇO
+                                    </Typography>
                                 </Grid>
+
                                 <Grid size={{ xs: 12, sm: 8 }}>
-                                    <InfoItem label="Logradouro" value={`${professional.street}, ${professional.number}`} />
+                                    <InfoItem label="Logradouro" value={`${professional.street}, ${professional.number} ${professional.number ? '' : '(S/N)'}`} />
                                 </Grid>
                                 <Grid size={{ xs: 12, sm: 4 }}>
                                     <InfoItem label="Bairro" value={professional.neighborhood} />
@@ -265,16 +311,35 @@ const ProfessionalDetail: React.FC = () => {
                     </Card>
                 </Grid>
 
-                {/* Professional Info */}
+                {/* Professional / Technical manager Info */}
                 <Grid size={{ xs: 12, md: 6 }}>
                     <Card sx={{ height: '100%' }}>
                         <CardHeader
                             avatar={<Avatar sx={{ bgcolor: 'primary.light', color: 'primary.main' }}><Briefcase size={20} /></Avatar>}
-                            title={<Typography variant="h6" fontWeight={600}>Dados Profissionais</Typography>}
+                            title={<Typography variant="h6" fontWeight={600}>{isPJ ? 'Responsável Técnico & Dados' : 'Dados Profissionais'}</Typography>}
                         />
                         <Divider />
                         <CardContent>
                             <Grid container spacing={3}>
+                                {isPJ && (
+                                    <>
+                                        <Grid size={{ xs: 12 }}>
+                                            <Typography variant="subtitle2" color="primary" fontWeight={700} sx={{ mb: 2 }}>
+                                                RESPONSÁVEL TÉCNICO
+                                            </Typography>
+                                        </Grid>
+                                        <Grid size={{ xs: 12, sm: 8 }}>
+                                            <InfoItem label="Nome do Responsável" value={professional.technical_manager_name} />
+                                        </Grid>
+                                        <Grid size={{ xs: 12, sm: 4 }}>
+                                            <InfoItem label="CPF do Responsável" value={professional.technical_manager_cpf} />
+                                        </Grid>
+                                        <Grid size={{ xs: 12 }}>
+                                            <Divider sx={{ my: 1 }} />
+                                        </Grid>
+                                    </>
+                                )}
+
                                 <Grid size={{ xs: 12 }}>
                                     <InfoItem label="Formação Acadêmica" value={professional.education} />
                                 </Grid>
