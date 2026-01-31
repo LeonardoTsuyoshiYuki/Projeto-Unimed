@@ -8,7 +8,6 @@ import {
     Box,
     Button,
     Container,
-    Grid,
     Paper,
     TextField,
     Typography,
@@ -22,7 +21,8 @@ import {
     FormControl,
     FormLabel,
     InputAdornment,
-    IconButton
+    IconButton,
+    Grid
 } from '@mui/material';
 import { Upload, CheckCircle, AlertCircle, Search, Check, AlertTriangle } from 'lucide-react';
 import { publicApi } from '../../services/api';
