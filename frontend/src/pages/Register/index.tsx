@@ -124,10 +124,10 @@ const schema = z.object({
     }
 });
 
-type FormData = z.infer<typeof schema>;
+type RegisterFormData = z.infer<typeof schema>;
 
 export const Register: React.FC = () => {
-    const { register, handleSubmit, setValue, setFocus, watch, control, formState: { errors } } = useForm<FormData>({
+    const { register, handleSubmit, setValue, setFocus, watch, control, formState: { errors } } = useForm<RegisterFormData>({
         resolver: zodResolver(schema),
         defaultValues: {
             person_type: 'PF'
@@ -193,7 +193,7 @@ export const Register: React.FC = () => {
         }
     };
 
-    const onSubmit = async (data: FormData) => {
+    const onSubmit = async (data: RegisterFormData) => {
         if (!files || files.length === 0) {
             setGeneralError("Por favor, anexe pelo menos um documento.");
             return;
