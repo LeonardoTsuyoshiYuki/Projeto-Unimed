@@ -50,7 +50,10 @@ interface Document {
     description: string;
     uploaded_at: string;
     file_size?: number;
+    download_url?: string;
 }
+
+
 
 interface Professional {
     id: string;

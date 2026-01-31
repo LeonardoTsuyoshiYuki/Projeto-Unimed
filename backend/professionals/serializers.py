@@ -5,17 +5,25 @@ from .models import Professional, Document
 
 class DocumentSerializer(serializers.ModelSerializer):
     file_size = serializers.SerializerMethodField()
+    download_url = serializers.SerializerMethodField()
     
     class Meta:
         model = Document
-        fields = ['id', 'professional', 'file', 'description', 'uploaded_at', 'file_size']
-        read_only_fields = ['id', 'uploaded_at', 'file_size']
+        fields = ['id', 'professional', 'file', 'description', 'uploaded_at', 'file_size', 'download_url']
+        read_only_fields = ['id', 'uploaded_at', 'file_size', 'download_url']
 
     def get_file_size(self, obj):
         try:
             return obj.file.size
         except Exception:
             return 0
+
+    def get_download_url(self, obj):
+        from rest_framework.reverse import reverse
+        request = self.context.get('request')
+        if request is None:
+            return None
+        return reverse('document-download', kwargs={'pk': obj.pk}, request=request)
 
 class ProfessionalSerializer(serializers.ModelSerializer):
     documents = DocumentSerializer(many=True, read_only=True)
