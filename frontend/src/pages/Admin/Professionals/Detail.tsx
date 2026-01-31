@@ -78,6 +78,17 @@ interface Professional {
     internal_notes?: string;
 }
 
+const InfoItem = ({ label, value }: { label: string; value: string | number | undefined }) => (
+    <Box>
+        <Typography variant="caption" color="text.secondary" fontWeight={600} display="block" sx={{ textTransform: 'uppercase', mb: 0.5 }}>
+            {label}
+        </Typography>
+        <Typography variant="body1" sx={{ overflowWrap: 'anywhere', wordBreak: 'break-word', whiteSpace: 'normal', fontWeight: 500 }}>
+            {value || '-'}
+        </Typography>
+    </Box>
+);
+
 const ProfessionalDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -167,7 +178,7 @@ const ProfessionalDetail: React.FC = () => {
     if (!professional) return <Box sx={{ p: 4, textAlign: 'center' }}><Typography>Profissional não encontrado.</Typography></Box>;
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4, animation: 'fadeIn 0.5s' }}>
+        <Container maxWidth="xl" sx={{ py: 4, animation: 'fadeIn 0.5s' }}>
             {/* Header */}
             <Paper sx={{ p: 3, mb: 4, borderRadius: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
@@ -221,23 +232,34 @@ const ProfessionalDetail: React.FC = () => {
                         />
                         <Divider />
                         <CardContent>
-                            <Grid container spacing={2}>
-                                {[
-                                    { l: 'E-mail', v: professional.email },
-                                    { l: 'Telefone', v: professional.phone },
-                                    { l: 'Nascimento', v: new Date(professional.birth_date).toLocaleDateString() },
-                                    { l: 'Endereço', v: `${professional.street}, ${professional.number}` },
-                                    { l: 'Bairro', v: professional.neighborhood },
-                                    { l: 'Cidade/UF', v: `${professional.city} / ${professional.state}` },
-                                    { l: 'CEP', v: professional.zip_code }
-                                ].map((item) => (
-                                    <Grid size={{ xs: 12, sm: 6 }} key={item.l}>
-                                        <Typography variant="caption" color="text.secondary" fontWeight={600} display="block" sx={{ textTransform: 'uppercase' }}>
-                                            {item.l}
-                                        </Typography>
-                                        <Typography variant="body1">{item.v}</Typography>
-                                    </Grid>
-                                ))}
+                            <Grid container spacing={3}>
+                                <Grid size={{ xs: 12, sm: 6 }}>
+                                    <InfoItem label="E-mail" value={professional.email} />
+                                </Grid>
+                                <Grid size={{ xs: 12, sm: 6 }}>
+                                    <InfoItem label="Telefone" value={professional.phone} />
+                                </Grid>
+                                <Grid size={{ xs: 12, sm: 6 }}>
+                                    <InfoItem label="CPF" value={professional.cpf} />
+                                </Grid>
+                                <Grid size={{ xs: 12, sm: 6 }}>
+                                    <InfoItem label="Nascimento" value={new Date(professional.birth_date).toLocaleDateString()} />
+                                </Grid>
+                                <Grid size={{ xs: 12 }}>
+                                    <Divider sx={{ my: 1 }} />
+                                </Grid>
+                                <Grid size={{ xs: 12, sm: 8 }}>
+                                    <InfoItem label="Logradouro" value={`${professional.street}, ${professional.number}`} />
+                                </Grid>
+                                <Grid size={{ xs: 12, sm: 4 }}>
+                                    <InfoItem label="Bairro" value={professional.neighborhood} />
+                                </Grid>
+                                <Grid size={{ xs: 12, sm: 6 }}>
+                                    <InfoItem label="Cidade/UF" value={`${professional.city} / ${professional.state}`} />
+                                </Grid>
+                                <Grid size={{ xs: 12, sm: 6 }}>
+                                    <InfoItem label="CEP" value={professional.zip_code} />
+                                </Grid>
                             </Grid>
                         </CardContent>
                     </Card>
@@ -252,21 +274,22 @@ const ProfessionalDetail: React.FC = () => {
                         />
                         <Divider />
                         <CardContent>
-                            <Grid container spacing={2}>
-                                {[
-                                    { l: 'Formação', v: professional.education },
-                                    { l: 'Instituição', v: `${professional.institution} (${professional.graduation_year})` },
-                                    { l: 'Conselho', v: `${professional.council_name}: ${professional.council_number}` },
-                                    { l: 'Experiência', v: `${professional.experience_years} anos` },
-                                    { l: 'Atuação', v: professional.area_of_action }
-                                ].map((item) => (
-                                    <Grid size={{ xs: 12 }} key={item.l}>
-                                        <Typography variant="caption" color="text.secondary" fontWeight={600} display="block" sx={{ textTransform: 'uppercase' }}>
-                                            {item.l}
-                                        </Typography>
-                                        <Typography variant="body1">{item.v}</Typography>
-                                    </Grid>
-                                ))}
+                            <Grid container spacing={3}>
+                                <Grid size={{ xs: 12 }}>
+                                    <InfoItem label="Formação Acadêmica" value={professional.education} />
+                                </Grid>
+                                <Grid size={{ xs: 12, sm: 8 }}>
+                                    <InfoItem label="Instituição" value={`${professional.institution} (${professional.graduation_year})`} />
+                                </Grid>
+                                <Grid size={{ xs: 12, sm: 4 }}>
+                                    <InfoItem label="Experiência" value={`${professional.experience_years} anos`} />
+                                </Grid>
+                                <Grid size={{ xs: 12, sm: 6 }}>
+                                    <InfoItem label="Conselho de Classe" value={`${professional.council_name}: ${professional.council_number}`} />
+                                </Grid>
+                                <Grid size={{ xs: 12, sm: 6 }}>
+                                    <InfoItem label="Área de Atuação" value={professional.area_of_action} />
+                                </Grid>
                             </Grid>
                         </CardContent>
                     </Card>
