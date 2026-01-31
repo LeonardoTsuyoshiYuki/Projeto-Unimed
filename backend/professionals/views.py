@@ -141,15 +141,14 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
         serializer = AuditLogSerializer(logs, many=True)
         return Response(serializer.data)
 
-    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAdminUser])
-    def export_excel(self, request):
+    def _generate_excel_response(self, queryset, filename):
         import openpyxl
         from django.http import HttpResponse
 
         response = HttpResponse(
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         )
-        response['Content-Disposition'] = 'attachment; filename=profissionais_unimed.xlsx'
+        response['Content-Disposition'] = f'attachment; filename={filename}'
 
         workbook = openpyxl.Workbook()
         worksheet = workbook.active
@@ -170,8 +169,6 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
         ]
 
         worksheet.append(columns)
-
-        queryset = self.filter_queryset(self.get_queryset())
 
         for prof in queryset:
             approval_date = prof.approved_at or prof.rejected_at
@@ -225,6 +222,26 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
 
         workbook.save(response)
         return response
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAdminUser])
+    def export_excel(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        return self._generate_excel_response(queryset, 'profissionais_unimed.xlsx')
+
+    @action(detail=True, methods=['get'], permission_classes=[permissions.IsAdminUser])
+    def export_individual_excel(self, request, pk=None):
+        professional = self.get_object()
+        
+        # Filename format: prestador_<nome>_<cpf|cnpj>_<data>.xlsx
+        identifier = professional.cnpj if professional.person_type == 'PJ' else professional.cpf
+        clean_identifier = (''.join(filter(str.isdigit, identifier))) if identifier else 'no_doc'
+        clean_name = "".join(c for c in professional.name if c.isalnum() or c in (' ', '_')).replace(' ', '_')
+        date_str = timezone.now().strftime('%Y%m%d')
+        
+        filename = f"prestador_{clean_name}_{clean_identifier}_{date_str}.xlsx"
+        
+        # We pass a list containing the single object to reuse the generation logic
+        return self._generate_excel_response([professional], filename)
 
 
 class DashboardViewSet(viewsets.GenericViewSet):

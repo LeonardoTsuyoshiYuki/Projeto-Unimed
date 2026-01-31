@@ -214,7 +214,42 @@ const ProfessionalDetail: React.FC = () => {
                         <Button variant="outlined" startIcon={<ArrowLeft />} onClick={() => navigate('/admin/professionals')}>
                             Voltar
                         </Button>
-                        <Button variant="outlined" startIcon={<Download />} onClick={() => {/* Copy export logic */ }}>
+                        <Button
+                            variant="outlined"
+                            startIcon={<Download />}
+                            onClick={async () => {
+                                try {
+                                    const token = localStorage.getItem('token');
+                                    const response = await api.get(`/api/professionals/${id}/export_individual_excel/`, {
+                                        responseType: 'blob',
+                                        headers: {
+                                            Authorization: `Bearer ${token}`
+                                        }
+                                    });
+                                    const url = window.URL.createObjectURL(new Blob([response.data]));
+                                    const link = document.createElement('a');
+                                    link.href = url;
+                                    // Filename logic is handled by backend Content-Disposition but we can force it or let browser handle.
+                                    // For best UX in React, we might try to extract from header or just set a default fallback, 
+                                    // but backend sends dynamic filename.
+                                    const contentDisposition = response.headers['content-disposition'];
+                                    let filename = 'prestador_export.xlsx';
+                                    if (contentDisposition) {
+                                        const match = contentDisposition.match(/filename="?([^"]+)"?/);
+                                        if (match && match[1]) {
+                                            filename = match[1];
+                                        }
+                                    }
+                                    link.setAttribute('download', filename);
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    link.remove();
+                                } catch (error) {
+                                    console.error("Erro ao exportar", error);
+                                    alert("Falha ao exportar arquivo.");
+                                }
+                            }}
+                        >
                             Exportar
                         </Button>
                     </Stack>
