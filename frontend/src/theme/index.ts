@@ -77,5 +77,49 @@ export const getDesignTokens = (mode: PaletteMode) => ({
                 },
             },
         },
+        MuiTextField: {
+            styleOverrides: {
+                root: {
+                    '& .MuiOutlinedInput-root': {
+                        borderRadius: 8,
+                    },
+                },
+            },
+        },
+        MuiOutlinedInput: {
+            styleOverrides: {
+                root: {
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                        borderWidth: 2,
+                    },
+                    '& input:-webkit-autofill': {
+                        WebkitBoxShadow: mode === 'dark' ? '0 0 0 100px #1e293b inset' : '0 0 0 100px #ffffff inset',
+                        WebkitTextFillColor: mode === 'dark' ? '#f1f5f9' : '#1e293b',
+                        caretColor: mode === 'dark' ? '#f1f5f9' : '#1e293b',
+                        borderRadius: '0px', // Prevent rounded corners on autofill background
+                    },
+                },
+                notchedOutline: {
+                    borderColor: mode === 'dark' ? '#475569' : '#e2e8f0',
+                },
+            },
+        },
+        MuiInputLabel: {
+            styleOverrides: {
+                root: {
+                    color: mode === 'dark' ? '#94a3b8' : '#64748b',
+                    '&.Mui-focused': {
+                        color: mode === 'dark' ? '#22c55e' : '#047857',
+                    },
+                },
+            },
+        },
+        MuiFormHelperText: {
+            styleOverrides: {
+                root: {
+                    marginLeft: 4,
+                },
+            },
+        },
     },
 } as const);
