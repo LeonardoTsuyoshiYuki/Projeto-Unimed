@@ -50,8 +50,10 @@ class TestEmailIntegration:
         mock_service_instance.send.assert_called_once()
         call_args = mock_service_instance.send.call_args[1]
         assert call_args['to'] == professional.email
-        assert call_args['subject'] == "Confirmação de Cadastro – Unimed"
-        assert "Seu cadastro foi realizado com sucesso" in call_args['content']
+        assert call_args['subject'] == "Confirmação de Recebimento de Cadastro – Unimed"
+        assert "Recebemos seu interesse em se credenciar" in call_args['content']
+        assert "Pessoa Física" in call_args['content']
+        assert "CPF: 123.***.***" in call_args['html_content']
 
     @patch('professionals.services.get_email_service')
     def test_integration_viewset_sends_email(self, mock_get_service):
