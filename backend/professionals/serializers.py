@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.utils import timezone
 from datetime import timedelta
+from django.core.validators import MinValueValidator, MaxValueValidator, MinLengthValidator
 from .models import Professional, Document
 
 class DocumentSerializer(serializers.ModelSerializer):
@@ -27,6 +28,11 @@ class DocumentSerializer(serializers.ModelSerializer):
 
 class ProfessionalSerializer(serializers.ModelSerializer):
     documents = DocumentSerializer(many=True, read_only=True)
+    graduation_year = serializers.IntegerField(
+        validators=[MinValueValidator(1950), MaxValueValidator(2100)],
+        error_messages={'min_value': 'Ano inválido.', 'max_value': 'Ano inválido.'}
+    )
+    experience_years = serializers.IntegerField(min_value=0)
     
     class Meta:
         model = Professional
@@ -43,9 +49,10 @@ class ProfessionalSerializer(serializers.ModelSerializer):
         read_only_fields = ['status', 'submission_date', 'consent_date']
         extra_kwargs = {
             'consent_given': {'required': True, 'allow_null': False},
-            'cpf': {'validators': []} # Disable default validators if any linger, though model change should suffice. 
-                                      # Actually DRF might still infer unique if model had it, but we changed model. 
-                                      # However, we should be explicit given the transition.
+            'cpf': {'validators': []},
+            'zip_code': {'min_length': 8, 'max_length': 9},
+            'phone': {'min_length': 10},
+            'state': {'min_length': 2, 'max_length': 2}
         }
 
     def validate_consent_given(self, value):
@@ -78,11 +85,6 @@ class ProfessionalSerializer(serializers.ModelSerializer):
                  raise serializers.ValidationError({"cpf": "CPF não deve ser preenchido para Pessoa Jurídica (use o do Responsável Técnico)."})
             
             # External CNPJ Integration
-            # Only validate if CNPJ is present (and changed or new)
-            # Optimization: If instance exists and CNPJ hasn't changed, skip validation?
-            # For now, let's validate to be safe or if status check is needed. 
-            # But let's skip if it's a patch of other fields to avoid API limits.
-            
             should_validate_cnpj = True
             if self.instance and self.instance.cnpj == cnpj and 'cnpj' not in data:
                  should_validate_cnpj = False

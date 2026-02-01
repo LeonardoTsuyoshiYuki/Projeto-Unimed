@@ -1,8 +1,8 @@
 from rest_framework import viewsets, permissions, parsers, filters, status
+from django.db import transaction
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
-from django.core.mail import send_mail
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Count, Avg, F
@@ -37,33 +37,45 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         try:
-            instance = serializer.save()
-            logger.info(
-                "Registration created", 
-                extra={
-                    "event": "registration_created", 
-                    "professional_id": str(instance.id),
-                    "status": instance.status
-                }
-            )
-            
-            # Log action
-            AuditLog.objects.create(
-                user=self.request.user if self.request.user.is_authenticated else None,
-                action='CREATE',
-                target_model='Professional',
-                target_id=str(instance.id),
-                details=f"Professional registered: {instance.name}"
-            )
-            # Email notification
+            with transaction.atomic():
+                instance = serializer.save()
+                
+                # Log action
+                AuditLog.objects.create(
+                    user=self.request.user if self.request.user.is_authenticated else None,
+                    action='CREATE',
+                    target_model='Professional',
+                    target_id=str(instance.id),
+                    details=f"Professional registered: {instance.name}"
+                )
+                
+                logger.info(
+                    "Registration created", 
+                    extra={
+                        "event": "registration_created", 
+                        "professional_id": str(instance.id),
+                        "status": instance.status
+                    }
+                )
+
+            # E-mail notification AFTER commit
             from .services import send_confirmation_email
-            send_confirmation_email(instance)
+            transaction.on_commit(lambda: self._safe_send_email(instance))
+            
         except Exception as e:
             logger.error(
                 "Registration creation failed", 
                 extra={"event": "registration_failed", "error": str(e)}
             )
             raise e
+
+    def _safe_send_email(self, instance, is_status_update=False):
+        """Helper to send email without risking the request cycle after commit."""
+        try:
+            from .services import send_confirmation_email
+            send_confirmation_email(instance, is_status_update=is_status_update)
+        except Exception as e:
+            logger.error(f"Post-commit email failure: {str(e)}")
 
     def perform_update(self, serializer):
         old_instance = self.get_object()
@@ -113,15 +125,9 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
                     details="Internal notes updated"
                 )
 
-            # Send email on status change
+            # Send email on status change via service
             if instance.status != old_status:
-                send_mail(
-                    f'Atualização de Status - Unimed: {instance.get_status_display()}',
-                    f'Olá {instance.name}, o status do seu cadastro mudou para: {instance.get_status_display()}.',
-                    'no-reply@unimed.com',
-                    [instance.email],
-                    fail_silently=True,
-                )
+                transaction.on_commit(lambda: self._safe_send_email(instance, is_status_update=True))
 
 
 
