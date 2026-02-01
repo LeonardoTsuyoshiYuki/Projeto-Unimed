@@ -6,11 +6,12 @@ from dataclasses import dataclass, field
 class EmailResult:
     success: bool
     provider: str
-    status: str # "sent", "queued", "failed", "simulated"
+    status: str # "sent", "queued", "failed", "simulated", "exception"
     details: dict = field(default_factory=dict)
     message_id: Optional[str] = None
     http_status: Optional[int] = None
     error: Optional[str] = None
+    debug: Optional[str] = None # Internal debug info, sanitized in responses
 
 class EmailProvider(ABC):
     """

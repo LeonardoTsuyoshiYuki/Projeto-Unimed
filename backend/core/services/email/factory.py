@@ -3,31 +3,30 @@ import logging
 from django.conf import settings
 from .providers.sendgrid import SendGridEmailProvider
 from .providers.console import ConsoleEmailProvider
+from .providers.django import DjangoEmailProvider
 from .service import EmailService
 
 logger = logging.getLogger(__name__)
 
 def get_email_service():
-    mode = getattr(settings, 'EMAIL_MODE', 'dev')
-    api_key = getattr(settings, 'SENDGRID_API_KEY', None) or os.getenv('SENDGRID_API_KEY')
+    mode = getattr(settings, 'EMAIL_MODE', 'dev').lower()
+    provider_name = getattr(settings, 'EMAIL_PROVIDER', 'console' if mode == 'dev' else 'django')
     
-    logger.info(f"Initializing Email Service. Mode: {mode}")
+    logger.info(f"Initializing Email Service. Mode: {mode}, Provider: {provider_name}")
 
-    if mode in ['sandbox', 'prod']:
+    # Fallback to console if using django provider but SMTP host/password is missing
+    if provider_name == 'django':
+        smtp_pass = getattr(settings, 'EMAIL_HOST_PASSWORD', None)
+        if not smtp_pass and mode == 'prod':
+            logger.warning("EMAIL_HOST_PASSWORD missing in production. Falling back to Console.")
+            return EmailService(ConsoleEmailProvider())
+        return EmailService(DjangoEmailProvider())
+    
+    if provider_name == 'sendgrid':
+        api_key = getattr(settings, 'SENDGRID_API_KEY', None)
         if api_key and api_key.startswith('SG.'):
-            try:
-                # SendGrid provider handles sandbox mode internally based on settings.EMAIL_MODE
-                provider = SendGridEmailProvider()
-                logger.info(f"Using SendGridEmailProvider (Mode: {mode})")
-            except Exception as e:
-                logger.error(f"Failed to initialize SendGridProvider: {e}. Falling back to Console.")
-                provider = ConsoleEmailProvider()
-        else:
-            logger.warning(f"SENDGRID_API_KEY invalid or missing in {mode} mode. Falling back to Console.")
-            provider = ConsoleEmailProvider()
-    else:
-        # Dev mode or unknown
-        logger.info("Using ConsoleEmailProvider (Dev Mode)")
-        provider = ConsoleEmailProvider()
-        
-    return EmailService(provider)
+            return EmailService(SendGridEmailProvider())
+        logger.warning("SENDGRID_API_KEY invalid or missing. Falling back to Console.")
+
+    # Default / Dev mode / Fallback
+    return EmailService(ConsoleEmailProvider())

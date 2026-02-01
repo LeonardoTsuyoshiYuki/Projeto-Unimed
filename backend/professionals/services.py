@@ -1,72 +1,95 @@
 import logging
+import re
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 from core.services.email.factory import get_email_service
 from .models import Professional
 
 logger = logging.getLogger(__name__)
 
-def send_confirmation_email(professional: Professional) -> bool:
-    """
-    Sends a confirmation email to the professional after successful registration
-    using the EmailService factory.
+def mask_credential(value: str) -> str:
+    """Masks CPF/CNPJ generically."""
+    if not value: return ""
+    digits = re.sub(r'\D', '', value)
+    length = len(digits)
     
-    Args:
-        professional (Professional): The professional instance just created.
-        
-    Returns:
-        bool: True if email sent successfully, False otherwise.
+    if length == 11: # CPF
+         return f"{digits[:3]}.***.***-{digits[9:]}"
+    elif length == 14: # CNPJ
+         return f"{digits[:2]}.***.***/****-{digits[12:]}"
+    return value
+
+def send_confirmation_email(professional: Professional, is_status_update=False) -> bool:
+    """
+    Sends a confirmation email to the professional using Django templates.
     """
     try:
         email_service = get_email_service()
         
-        content = f"""
-Olá,
+        is_pj = professional.person_type == 'PJ'
+        name = professional.name
+        status_display = professional.get_status_display()
+        
+        if is_pj:
+            doc_label = "CNPJ"
+            doc_value = mask_credential(professional.cnpj)
+            profile_type = "Pessoa Jurídica"
+        else:
+            doc_label = "CPF"
+            doc_value = mask_credential(professional.cpf)
+            profile_type = "Pessoa Física"
 
-Seu cadastro foi realizado com sucesso em nosso sistema.
+        if is_status_update:
+            subject = f"Atualização de Status – Unimed: {status_display}"
+            intro_msg = f"O status do seu cadastro foi atualizado para: <strong>{status_display}</strong>."
+        else:
+            subject = "Confirmação de Credenciamento - Unimed"
+            intro_msg = "Recebemos seu interesse em se credenciar à nossa rede."
 
-Em breve nossa equipe fará a validação das informações e você receberá novas instruções por e-mail.
+        context = {
+            'name': name,
+            'intro_msg': intro_msg,
+            'profile_type': profile_type,
+            'doc_label': doc_label,
+            'doc_value': doc_value,
+            'status_display': status_display,
+            'is_status_update': is_status_update
+        }
 
-Atenciosamente,
-Equipe Unimed
-        """
+        html_content = render_to_string('professionals/email/confirmation.html', context)
+        text_content = strip_tags(html_content)
 
         result = email_service.send(
             to=professional.email,
-            subject="Confirmação de Cadastro – Unimed",
-            content=content.strip()
+            subject=subject,
+            content=text_content,
+            html_content=html_content
         )
         
-        # Check success status from Result Object
         if result.success:
             logger.info(
-                f"Confirmation email sent to {professional.email}", 
+                f"Email sent to {professional.email}", 
                 extra={
-                    "event": "email_sent", 
+                    "event": "email_send",
                     "professional_id": str(professional.id),
-                    "provider": result.provider,
-                    "msg_id": result.message_id
+                    "type": professional.person_type,
+                    "success": True,
+                    "provider": result.provider
                 }
             )
             return True
         else:
             logger.error(
-                f"Failed to send confirmation email to {professional.email}. Status: {result.status}", 
+                f"Failed to send email to {professional.email}: {result.error}",
                 extra={
-                    "event": "email_failed", 
+                    "event": "email_send",
                     "professional_id": str(professional.id),
-                    "provider": result.provider,
-                    "error": result.error,
-                    "details": result.details
+                    "success": False,
+                    "error": result.error
                 }
             )
             return False
 
     except Exception as e:
-        logger.error(
-            f"Exception sending email to {professional.email}: {str(e)}", 
-            extra={
-                "event": "email_failed", 
-                "professional_id": str(professional.id),
-                "error": str(e)
-            }
-        )
+        logger.error(f"Exception sending email: {str(e)}", exc_info=True)
         return False
