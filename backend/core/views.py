@@ -34,19 +34,15 @@ def health_check(request):
         }, status=503)
 
 @api_view(['POST'])
-@permission_classes([AllowAny]) # Allowing Any for easier diagnostics as requested in prompt "Ignorar autenticação"? 
-# Prompt says: "Ignorar autenticação de usuário" but usually "IsAdminUser" is safer. 
-# Prompt says "Usado exclusivamente para diagnóstico".
-# Prompt says "Ignorar autenticação de usuário" -> implies AllowAny or specific check.
-# However, "Ignorar autenticação" usually means "Don't require user login". 
-# Given it's a diagnostic tool, I should probably keep it open or key protected, but prompt requested "endpoint de teste isolado".
-# I'll stick to AllowAny for this specific "Diagnóstico Real" phase as requested, but add a warning log.
+@permission_classes([IsAdminUser])
 def test_email_view(request):
     """
     Diagnostic endpoint to verify email configuration.
     Expects 'to' in body.
     Returns detailed diagnostics.
     """
+    import uuid
+    request_id = str(uuid.uuid4())
     to_email = request.data.get('to')
     
     if not to_email:
@@ -55,27 +51,43 @@ def test_email_view(request):
     email_service = get_email_service()
     mode = getattr(settings, 'EMAIL_MODE', 'unknown')
     
+    logger.info(
+        "Diagnostic email request started",
+        extra={"event": "email_test_start", "request_id": request_id, "to": to_email}
+    )
+
     result = email_service.send(
         subject="Diagnóstico de Envio - Unimed",
         to=to_email,
         content="Este é um email de teste para validar a infraestrutura de envio."
     )
     
-    # Construct Diagnostic Response
+    # Construct Sanitized Diagnostic Response
     response_data = {
+        "success": result.success,
         "provider": result.provider,
         "mode": mode,
-        "api_key_loaded": bool(getattr(settings, 'SENDGRID_API_KEY', None)),
         "status": result.status,
-        "http_status": result.http_status,
         "message_id": result.message_id,
-        "success": result.success,
         "details": result.details,
-        "diagnostic_hint": "Check provider logs" if not result.success else "Check inbox or activity feed"
+        "error": result.error if result.error else None,
+        "request_id": request_id
     }
     
+    if not result.success and result.debug:
+        logger.info(f"Diagnostic debug info: {result.debug}")
+
+    logger.info(
+        "Diagnostic email finished",
+        extra={
+            "event": "email_test_end", 
+            "request_id": request_id, 
+            "success": result.success,
+            "status": result.status
+        }
+    )
+
     status_code = 200 if result.success else 500
-    
     return Response(response_data, status=status_code)
 
 @api_view(['GET'])

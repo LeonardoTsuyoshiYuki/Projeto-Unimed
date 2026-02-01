@@ -24,36 +24,9 @@ import {
     Grid,
     Stack
 } from '@mui/material';
-import { Upload, CheckCircle, AlertCircle, Search, Check, AlertTriangle } from 'lucide-react';
+import { Upload, CheckCircle, AlertCircle, Search, Trash2 } from 'lucide-react';
 import { publicApi } from '../../services/api';
-
-const educationOptions = [
-    'Agente Comunitário de Saúde', 'Agente de Combate às Endemias', 'Acompanhante Terapêutico',
-    'Administrador Hospitalar', 'Analista de Regulação em Saúde', 'Antropólogo da Saúde',
-    'Aromaterapeuta', 'Arteterapeuta', 'Assistente Social (na saúde)', 'Audiologista',
-    'Auxiliar de Enfermagem', 'Auxiliar de Farmácia', 'Auxiliar de Saúde Bucal', 'Bioquímico',
-    'Biomédico', 'Biólogo (atuando na saúde)', 'Citotécnico', 'Cosmetólogo', 'Cuidador de Idosos',
-    'Dentista (Cirurgião-Dentista)', 'Dosimetrista', 'Doula', 'Educador Físico (Bacharel)',
-    'Educador em Saúde', 'Enfermeiro', 'Engenheiro Biomédico', 'Epidemiologista', 'Esteticista',
-    'Farmacêutico', 'Farmacêutico Clínico', 'Farmacêutico Hospitalar', 'Farmacêutico Industrial',
-    'Fisioterapeuta', 'Fonoaudiólogo', 'Gerontólogo', 'Gestor Hospitalar', 'Gestor em Saúde',
-    'Histotécnico', 'Massoterapeuta', 'Musicoterapeuta', 'Naturopata', 'Nutricionista',
-    'Obstetriz', 'Optometrista', 'Óptico', 'Operador de Raios-X', 'Ortesista e Protesista',
-    'Osteopata', 'Parteira Tradicional', 'Patologista Clínico (não médico)', 'Podólogo',
-    'Protético Dentário', 'Psicanalista', 'Psicólogo', 'Quiropraxista', 'Radiologista Tecnólogo',
-    'Reflexoterapeuta', 'Sanitarista', 'Sociólogo da Saúde', 'Técnico em Administração Hospitalar',
-    'Técnico em Análises Clínicas', 'Técnico em Audiometria', 'Técnico em Banco de Sangue',
-    'Técnico em Enfermagem', 'Técnico em Equipamentos Biomédicos', 'Técnico em Farmácia',
-    'Técnico em Gerontologia', 'Técnico em Hemoterapia', 'Técnico em Histologia',
-    'Técnico em Imobilizações Ortopédicas', 'Técnico em Imagenologia', 'Técnico em Nutrição e Dietética',
-    'Técnico em Óptica', 'Técnico em Prótese Dentária', 'Técnico em Radiologia',
-    'Técnico em Registros e Informações em Saúde', 'Técnico em Saúde Bucal', 'Técnico em Saúde Pública',
-    'Técnico em Vigilância em Saúde', 'Tecnólogo em Análises Clínicas', 'Tecnólogo em Estética e Cosmética',
-    'Tecnólogo em Oftálmica', 'Tecnólogo em Radiologia', 'Tecnólogo em Saúde Pública',
-    'Tecnólogo em Sistemas Biomédicos', 'Terapeuta Cognitivo-Comportamental', 'Terapeuta Familiar',
-    'Terapeuta Holístico', 'Terapeuta Integrativo', 'Terapeuta Ocupacional',
-    'Outros'
-];
+import { EDUCATION_OPTIONS } from '../../constants/education';
 
 const schema = z.object({
     person_type: z.enum(['PF', 'PJ']),
@@ -136,7 +109,7 @@ export const Register: React.FC = () => {
 
     const personType = watch('person_type');
 
-    const [files, setFiles] = useState<FileList | null>(null);
+    const [files, setFiles] = useState<File[]>([]); // Changed to Array for easier management
     const [isLoading, setIsLoading] = useState(false);
     const [generalError, setGeneralError] = useState('');
     const [cnpjStatus, setCnpjStatus] = useState<{ valid: boolean, message: string, status: string } | null>(null);
@@ -148,8 +121,14 @@ export const Register: React.FC = () => {
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
-            setFiles(e.target.files);
+            // Convert to array and append
+            const newFiles = Array.from(e.target.files);
+            setFiles(prev => [...prev, ...newFiles]);
         }
+    };
+
+    const removeFile = (index: number) => {
+        setFiles(prev => prev.filter((_, i) => i !== index));
     };
 
     const handleCepBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
@@ -161,10 +140,10 @@ export const Register: React.FC = () => {
                     setGeneralError("CEP não encontrado.");
                     return;
                 }
-                setValue('street', response.data.logradouro);
-                setValue('neighborhood', response.data.bairro);
-                setValue('city', response.data.localidade);
-                setValue('state', response.data.uf);
+                setValue('street', response.data.logradouro, { shouldValidate: true });
+                setValue('neighborhood', response.data.bairro, { shouldValidate: true });
+                setValue('city', response.data.localidade, { shouldValidate: true });
+                setValue('state', response.data.uf, { shouldValidate: true });
                 setFocus('number');
                 setGeneralError('');
             } catch (error) {
@@ -194,7 +173,7 @@ export const Register: React.FC = () => {
     };
 
     const onSubmit = async (data: RegisterFormData) => {
-        if (!files || files.length === 0) {
+        if (files.length === 0) {
             setGeneralError("Por favor, anexe pelo menos um documento.");
             return;
         }
@@ -231,7 +210,7 @@ export const Register: React.FC = () => {
             const response = await publicApi.post('/api/professionals/', payload);
             const professionalId = response.data.id;
 
-            const fileUploads = Array.from(files).map(file => {
+            const fileUploads = files.map(file => {
                 const formData = new FormData();
                 formData.append('file', file);
                 formData.append('professional', professionalId);
@@ -265,10 +244,10 @@ export const Register: React.FC = () => {
             <Paper sx={{ p: { xs: 3, md: 5 }, borderRadius: 4, boxShadow: 3 }}>
                 <Box sx={{ mb: 4, textAlign: 'center' }}>
                     <Typography variant="h4" fontWeight="bold" gutterBottom color="primary">
-                        Credenciamento
+                        Credenciamento Unimed
                     </Typography>
                     <Typography color="text.secondary">
-                        Selecione o tipo de inscrição e preencha os dados
+                        Preencha os dados abaixo para iniciar seu credenciamento
                     </Typography>
                 </Box>
 
@@ -280,12 +259,11 @@ export const Register: React.FC = () => {
 
                 <Box component="form" onSubmit={handleSubmit(onSubmit)}>
 
-                    <Stack spacing={2}>
-                        <Typography variant="h6" fontWeight={600} gutterBottom sx={{ borderBottom: 1, borderColor: 'divider', pb: 1 }}>
-                            Tipo de Cadastro
-                        </Typography>
-
+                    <Stack spacing={4}>
                         <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
+                            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                                Tipo de Profissional
+                            </Typography>
                             <FormControl component="fieldset" fullWidth>
                                 <Controller
                                     rules={{ required: true }}
@@ -296,283 +274,296 @@ export const Register: React.FC = () => {
                                             <FormControlLabel
                                                 value="PF"
                                                 control={<Radio />}
-                                                label="Pessoa Física (Profissional Liberal)"
-                                                sx={{ mr: { xs: 0, sm: 4 }, mb: { xs: 1, sm: 0 } }}
+                                                label="Pessoa Física"
+                                                sx={{ mr: 4 }}
                                             />
                                             <FormControlLabel
                                                 value="PJ"
                                                 control={<Radio />}
-                                                label="Pessoa Jurídica (Clínica/Empresa)"
+                                                label="Pessoa Jurídica"
                                             />
                                         </RadioGroup>
                                     )}
                                 />
                             </FormControl>
                         </Paper>
-                    </Stack>
 
+                        <Box>
+                            <Typography variant="h6" fontWeight={600} gutterBottom sx={{ borderBottom: 1, borderColor: 'divider', pb: 1 }}>
+                                Dados {personType === 'PJ' ? 'da Empresa' : 'Pessoais'}
+                            </Typography>
 
-                    <Typography variant="h6" fontWeight={600} gutterBottom sx={{ mt: 4, borderBottom: 1, borderColor: 'divider', pb: 1 }}>
-                        Dados {personType === 'PJ' ? 'da Empresa' : 'Pessoais'}
-                    </Typography>
+                            <Grid container spacing={2} sx={{ mt: 1 }}>
+                                {personType === 'PF' && (
+                                    <>
+                                        <Grid size={{ xs: 12 }}>
+                                            <TextField fullWidth label="Nome Completo" placeholder="Ex: Dr. João Silva" {...register('name')} error={!!errors.name} helperText={errors.name?.message} />
+                                        </Grid>
+                                        <Grid size={{ xs: 12, sm: 6 }}>
+                                            <TextField fullWidth label="CPF" placeholder="000.000.000-00" inputProps={{ maxLength: 14 }} {...register('cpf')} error={!!errors.cpf} helperText={errors.cpf?.message} />
+                                        </Grid>
+                                    </>
+                                )}
 
-                    <Grid container spacing={2}>
-                        {personType === 'PF' && (
-                            <>
-                                <Grid size={{ xs: 12 }}>
-                                    <TextField fullWidth label="Nome Completo" placeholder="Ex: Dr. João Silva" {...register('name')} error={!!errors.name} helperText={errors.name?.message} />
+                                {personType === 'PJ' && (
+                                    <>
+                                        <Grid size={{ xs: 12 }}>
+                                            <TextField fullWidth label="Razão Social" placeholder="Ex: Clinica Medica LTDA" {...register('name')} error={!!errors.name} helperText={errors.name?.message} />
+                                        </Grid>
+                                        <Grid size={{ xs: 12, sm: 6 }}>
+                                            <TextField fullWidth label="Nome Fantasia" placeholder="Ex: Vida Saudável" {...register('company_name')} error={!!errors.company_name} helperText={errors.company_name?.message} />
+                                        </Grid>
+                                        <Grid size={{ xs: 12, sm: 6 }}>
+                                            <TextField
+                                                fullWidth
+                                                label="CNPJ"
+                                                placeholder="00.000.000/0000-00"
+                                                inputProps={{ maxLength: 18 }}
+                                                {...register('cnpj')}
+                                                error={!!errors.cnpj || (cnpjStatus?.valid === false)}
+                                                helperText={errors.cnpj?.message || (cnpjStatus?.valid === false ? cnpjStatus.message : null)}
+                                                InputProps={{
+                                                    endAdornment: (
+                                                        <InputAdornment position="end">
+                                                            <IconButton onClick={validateCNPJ} disabled={isValidatingCnpj || !cnpjValue} color={cnpjStatus?.valid ? 'success' : 'default'} edge="end">
+                                                                {isValidatingCnpj ? <CircularProgress size={20} /> : (cnpjStatus?.valid ? <CheckCircle color="green" /> : <Search />)}
+                                                            </IconButton>
+                                                        </InputAdornment>
+                                                    )
+                                                }}
+                                            />
+                                        </Grid>
+                                    </>
+                                )}
+
+                                <Grid size={{ xs: 12, sm: 6 }}>
+                                    <TextField fullWidth label={personType === 'PJ' ? "Email Institucional" : "E-mail Profissional"} type="email" placeholder="email@exemplo.com" {...register('email')} error={!!errors.email} helperText={errors.email?.message} />
                                 </Grid>
                                 <Grid size={{ xs: 12, sm: 6 }}>
-                                    <TextField fullWidth label="CPF" placeholder="000.000.000-00" inputProps={{ maxLength: 14 }} {...register('cpf')} error={!!errors.cpf} helperText={errors.cpf?.message} />
+                                    <TextField fullWidth label="Telefone/Celular" placeholder="(00) 00000-0000" {...register('phone')} error={!!errors.phone} helperText={errors.phone?.message} />
                                 </Grid>
-                            </>
-                        )}
 
-                        {personType === 'PJ' && (
-                            <>
-                                <Grid size={{ xs: 12 }}>
-                                    <TextField fullWidth label="Razão Social" placeholder="Ex: Clinica Medica LTDA" {...register('name')} error={!!errors.name} helperText={errors.name?.message} />
-                                </Grid>
+                                {personType === 'PJ' && (
+                                    <>
+                                        <Grid size={{ xs: 12 }}>
+                                            <Typography variant="subtitle2" sx={{ mt: 2, color: 'text.secondary', fontWeight: 'bold' }}>Responsável Técnico</Typography>
+                                        </Grid>
+                                        <Grid size={{ xs: 12, sm: 8 }}>
+                                            <TextField fullWidth label="Nome do Responsável Técnico" {...register('technical_manager_name')} error={!!errors.technical_manager_name} helperText={errors.technical_manager_name?.message} />
+                                        </Grid>
+                                        <Grid size={{ xs: 12, sm: 4 }}>
+                                            <TextField fullWidth label="CPF do Responsável" {...register('technical_manager_cpf')} error={!!errors.technical_manager_cpf} helperText={errors.technical_manager_cpf?.message} />
+                                        </Grid>
+                                    </>
+                                )}
+
                                 <Grid size={{ xs: 12, sm: 6 }}>
-                                    <TextField fullWidth label="Nome Fantasia" placeholder="Ex: Vida Saudável" {...register('company_name')} error={!!errors.company_name} helperText={errors.company_name?.message} />
+                                    <TextField
+                                        fullWidth
+                                        type="date"
+                                        label={personType === 'PJ' ? "Data de Abertura" : "Data de Nascimento"}
+                                        InputLabelProps={{ shrink: true }}
+                                        {...register('birth_date')}
+                                        error={!!errors.birth_date}
+                                        helperText={errors.birth_date?.message}
+                                    />
+                                </Grid>
+                            </Grid>
+                        </Box>
+
+                        <Box>
+                            <Typography variant="h6" fontWeight={600} gutterBottom sx={{ borderBottom: 1, borderColor: 'divider', pb: 1 }}>
+                                Endereço
+                            </Typography>
+                            <Grid container spacing={2} sx={{ mt: 1 }}>
+                                <Grid size={{ xs: 12, sm: 3 }}>
+                                    <TextField
+                                        fullWidth
+                                        label="CEP"
+                                        placeholder="00000000"
+                                        inputProps={{ maxLength: 9 }}
+                                        {...register('zip_code')}
+                                        onBlur={handleCepBlur}
+                                        error={!!errors.zip_code}
+                                        helperText={errors.zip_code?.message}
+                                        InputLabelProps={{ shrink: true }}
+                                    />
+                                </Grid>
+                                <Grid size={{ xs: 12, sm: 7 }}>
+                                    <TextField
+                                        fullWidth
+                                        label="Cidade"
+                                        {...register('city')}
+                                        error={!!errors.city}
+                                        helperText={errors.city?.message}
+                                        InputProps={{ readOnly: true }}
+                                        InputLabelProps={{ shrink: true }}
+                                    />
+                                </Grid>
+                                <Grid size={{ xs: 12, sm: 2 }}>
+                                    <TextField
+                                        fullWidth
+                                        label="UF"
+                                        {...register('state')}
+                                        error={!!errors.state}
+                                        helperText={errors.state?.message}
+                                        InputProps={{ readOnly: true }}
+                                        InputLabelProps={{ shrink: true }}
+                                    />
+                                </Grid>
+                                <Grid size={{ xs: 12, sm: 9 }}>
+                                    <TextField
+                                        fullWidth
+                                        label="Logradouro"
+                                        {...register('street')}
+                                        error={!!errors.street}
+                                        helperText={errors.street?.message}
+                                        InputProps={{ readOnly: true }}
+                                        InputLabelProps={{ shrink: true }}
+                                    />
+                                </Grid>
+                                <Grid size={{ xs: 12, sm: 3 }}>
+                                    <TextField
+                                        fullWidth
+                                        label="Número"
+                                        {...register('number')}
+                                        error={!!errors.number}
+                                        helperText={errors.number?.message}
+                                        InputLabelProps={{ shrink: true }}
+                                    />
                                 </Grid>
                                 <Grid size={{ xs: 12, sm: 6 }}>
                                     <TextField
                                         fullWidth
-                                        label="CNPJ"
-                                        placeholder="00.000.000/0000-00"
-                                        inputProps={{ maxLength: 18 }}
-                                        {...register('cnpj')}
-                                        error={!!errors.cnpj || (cnpjStatus?.valid === false)}
-                                        helperText={errors.cnpj?.message || (cnpjStatus?.valid === false ? cnpjStatus.message : null)}
-                                        InputProps={{
-                                            endAdornment: (
-                                                <InputAdornment position="end">
-                                                    <IconButton onClick={validateCNPJ} disabled={isValidatingCnpj || !cnpjValue} color={cnpjStatus?.valid ? 'success' : 'default'}>
-                                                        {isValidatingCnpj ? <CircularProgress size={20} /> : (cnpjStatus?.valid ? <CheckCircle color="green" /> : <Search />)}
-                                                    </IconButton>
-                                                </InputAdornment>
-                                            )
-                                        }}
+                                        label="Bairro"
+                                        {...register('neighborhood')}
+                                        error={!!errors.neighborhood}
+                                        helperText={errors.neighborhood?.message}
+                                        InputProps={{ readOnly: true }}
+                                        InputLabelProps={{ shrink: true }}
                                     />
-                                    {cnpjStatus?.valid && (
-                                        <Typography variant="caption" color="success.main" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
-                                            <Check size={14} /> {cnpjStatus.message}
-                                        </Typography>
-                                    )}
-                                    {cnpjStatus?.valid === false && (
-                                        <Typography variant="caption" color="error" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
-                                            <AlertTriangle size={14} /> {cnpjStatus.message}
-                                        </Typography>
-                                    )}
                                 </Grid>
-                            </>
-                        )}
+                                <Grid size={{ xs: 12, sm: 6 }}>
+                                    <TextField
+                                        fullWidth
+                                        label="Complemento"
+                                        {...register('complement')}
+                                        InputLabelProps={{ shrink: true }}
+                                    />
+                                </Grid>
+                            </Grid>
+                        </Box>
 
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                            <TextField fullWidth label={personType === 'PJ' ? "Email Institucional" : "E-mail Profissional"} type="email" placeholder="email@exemplo.com" {...register('email')} error={!!errors.email} helperText={errors.email?.message} />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                            <TextField fullWidth label="Telefone/Celular" placeholder="(00) 00000-0000" {...register('phone')} error={!!errors.phone} helperText={errors.phone?.message} />
-                        </Grid>
-
-                        {personType === 'PJ' && (
-                            <>
+                        <Box>
+                            <Typography variant="h6" fontWeight={600} gutterBottom sx={{ borderBottom: 1, borderColor: 'divider', pb: 1 }}>
+                                Dados Profissionais
+                            </Typography>
+                            <Grid container spacing={2} sx={{ mt: 1 }}>
                                 <Grid size={{ xs: 12 }}>
-                                    <Typography variant="subtitle2" sx={{ mt: 2, color: 'text.secondary', fontWeight: 'bold' }}>Responsável Técnico</Typography>
+                                    <TextField
+                                        select
+                                        fullWidth
+                                        label="Formação Acadêmica"
+                                        defaultValue=""
+                                        {...register('education')}
+                                        error={!!errors.education}
+                                        helperText={errors.education?.message}
+                                        InputLabelProps={{ shrink: true }}
+                                    >
+                                        {EDUCATION_OPTIONS.map((option) => (
+                                            <MenuItem key={option} value={option}>{option}</MenuItem>
+                                        ))}
+                                    </TextField>
                                 </Grid>
+                                {selectedEducation === 'Outros' && (
+                                    <Grid size={{ xs: 12 }}>
+                                        <TextField
+                                            fullWidth
+                                            label="Qual sua formação?"
+                                            placeholder="Digite sua formação"
+                                            {...register('custom_education')}
+                                            error={!!errors.custom_education}
+                                            helperText={errors.custom_education?.message}
+                                            InputLabelProps={{ shrink: true }}
+                                        />
+                                    </Grid>
+                                )}
                                 <Grid size={{ xs: 12, sm: 8 }}>
-                                    <TextField fullWidth label="Nome do Responsável Técnico" {...register('technical_manager_name')} error={!!errors.technical_manager_name} helperText={errors.technical_manager_name?.message} />
+                                    <TextField fullWidth label="Instituição de Ensino" placeholder="Ex: USP" {...register('institution')} error={!!errors.institution} helperText={errors.institution?.message} InputLabelProps={{ shrink: true }} />
                                 </Grid>
                                 <Grid size={{ xs: 12, sm: 4 }}>
-                                    <TextField fullWidth label="CPF do Responsável" {...register('technical_manager_cpf')} error={!!errors.technical_manager_cpf} helperText={errors.technical_manager_cpf?.message} />
+                                    <TextField fullWidth label="Ano Conclusão" placeholder="2020" inputProps={{ maxLength: 4 }} {...register('graduation_year')} error={!!errors.graduation_year} helperText={errors.graduation_year?.message} InputLabelProps={{ shrink: true }} />
                                 </Grid>
-                            </>
-                        )}
-
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                            <TextField fullWidth type="date" label={personType === 'PJ' ? "Data de Abertura" : "Data de Nascimento"} InputLabelProps={{ shrink: true }} {...register('birth_date')} error={!!errors.birth_date} helperText={errors.birth_date?.message} />
-                        </Grid>
-                    </Grid>
-
-                    <Typography variant="h6" fontWeight={600} gutterBottom sx={{ mt: 4, borderBottom: 1, borderColor: 'divider', pb: 1 }}>
-                        Endereço
-                    </Typography>
-                    <Grid container spacing={2}>
-                        <Grid size={{ xs: 12, sm: 3 }}>
-                            <TextField
-                                fullWidth
-                                label="CEP"
-                                placeholder="00000000"
-                                inputProps={{ maxLength: 8 }}
-                                {...register('zip_code')}
-                                onBlur={handleCepBlur}
-                                error={!!errors.zip_code}
-                                helperText={errors.zip_code?.message}
-                                InputLabelProps={{ shrink: !!watch('zip_code') || undefined }}
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 7 }}>
-                            <TextField
-                                fullWidth
-                                label="Cidade"
-                                {...register('city')}
-                                error={!!errors.city}
-                                helperText={errors.city?.message}
-                                InputProps={{ readOnly: true }}
-                                InputLabelProps={{ shrink: !!watch('city') || undefined }}
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 2 }}>
-                            <TextField
-                                fullWidth
-                                label="UF"
-                                {...register('state')}
-                                error={!!errors.state}
-                                helperText={errors.state?.message}
-                                InputProps={{ readOnly: true }}
-                                InputLabelProps={{ shrink: !!watch('state') || undefined }}
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 9 }}>
-                            <TextField
-                                fullWidth
-                                label="Logradouro"
-                                {...register('street')}
-                                error={!!errors.street}
-                                helperText={errors.street?.message}
-                                InputProps={{ readOnly: true }}
-                                InputLabelProps={{ shrink: !!watch('street') || undefined }}
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 3 }}>
-                            <TextField
-                                fullWidth
-                                label="Número"
-                                {...register('number')}
-                                error={!!errors.number}
-                                helperText={errors.number?.message}
-                                InputLabelProps={{ shrink: !!watch('number') || undefined }}
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                            <TextField
-                                fullWidth
-                                label="Bairro"
-                                {...register('neighborhood')}
-                                error={!!errors.neighborhood}
-                                helperText={errors.neighborhood?.message}
-                                InputProps={{ readOnly: true }}
-                                InputLabelProps={{ shrink: !!watch('neighborhood') || undefined }}
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                            <TextField
-                                fullWidth
-                                label="Complemento"
-                                {...register('complement')}
-                                InputLabelProps={{ shrink: !!watch('complement') || undefined }}
-                            />
-                        </Grid>
-                    </Grid>
-
-                    <Typography variant="h6" fontWeight={600} gutterBottom sx={{ mt: 4, borderBottom: 1, borderColor: 'divider', pb: 1 }}>
-                        Dados Profissionais
-                    </Typography>
-                    <Grid container spacing={2}>
-                        <Grid size={{ xs: 12 }}>
-                            <TextField
-                                select
-                                fullWidth
-                                label="Formação Acadêmica"
-                                defaultValue=""
-                                {...register('education')}
-                                error={!!errors.education}
-                                helperText={errors.education?.message}
-                            >
-                                {educationOptions.map((option) => (
-                                    <MenuItem key={option} value={option}>{option}</MenuItem>
-                                ))}
-                            </TextField>
-                        </Grid>
-                        {selectedEducation === 'Outros' && (
-                            <Grid size={{ xs: 12 }}>
-                                <TextField
-                                    fullWidth
-                                    label="Qual sua formação?"
-                                    placeholder="Digite sua formação"
-                                    {...register('custom_education')}
-                                    error={!!errors.custom_education}
-                                    helperText={errors.custom_education?.message}
-                                />
+                                <Grid size={{ xs: 12, sm: 6 }}>
+                                    <TextField fullWidth label="Conselho de Classe" placeholder="Ex: CRM-SP" {...register('council_name')} error={!!errors.council_name} helperText={errors.council_name?.message} InputLabelProps={{ shrink: true }} />
+                                </Grid>
+                                <Grid size={{ xs: 12, sm: 6 }}>
+                                    <TextField fullWidth label="Número Inscrição" placeholder="123456" {...register('council_number')} error={!!errors.council_number} helperText={errors.council_number?.message} InputLabelProps={{ shrink: true }} />
+                                </Grid>
+                                <Grid size={{ xs: 12, sm: 6 }}>
+                                    <TextField fullWidth label="Tempo de Experiência (anos)" type="number" placeholder="Ex: 5" {...register('experience_years')} error={!!errors.experience_years} helperText={errors.experience_years?.message} InputLabelProps={{ shrink: true }} />
+                                </Grid>
+                                <Grid size={{ xs: 12, sm: 6 }}>
+                                    <TextField fullWidth label="Área de Atuação (Opcional)" placeholder="Ex: Cardiologia" {...register('area_of_action')} InputLabelProps={{ shrink: true }} />
+                                </Grid>
                             </Grid>
-                        )}
-                        <Grid size={{ xs: 12, sm: 8 }}>
-                            <TextField fullWidth label="Instituição de Ensino" placeholder="Ex: USP" {...register('institution')} error={!!errors.institution} helperText={errors.institution?.message} />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 4 }}>
-                            <TextField fullWidth label="Ano Conclusão" placeholder="2020" inputProps={{ maxLength: 4 }} {...register('graduation_year')} error={!!errors.graduation_year} helperText={errors.graduation_year?.message} />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                            <TextField fullWidth label="Conselho de Classe" placeholder="Ex: CRM-SP" {...register('council_name')} error={!!errors.council_name} helperText={errors.council_name?.message} />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                            <TextField fullWidth label="Número Inscrição" placeholder="123456" {...register('council_number')} error={!!errors.council_number} helperText={errors.council_number?.message} />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                            <TextField fullWidth label="Tempo de Experiência (anos)" type="number" placeholder="Ex: 5" {...register('experience_years')} error={!!errors.experience_years} helperText={errors.experience_years?.message} />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                            <TextField fullWidth label="Área de Atuação (Opcional)" placeholder="Ex: Cardiologia" {...register('area_of_action')} />
-                        </Grid>
-                    </Grid>
+                        </Box>
 
-                    <Typography variant="h6" fontWeight={600} gutterBottom sx={{ mt: 4, borderBottom: 1, borderColor: 'divider', pb: 1 }}>
-                        Documentação
-                    </Typography>
+                        <Box>
+                            <Typography variant="h6" fontWeight={600} gutterBottom sx={{ borderBottom: 1, borderColor: 'divider', pb: 1 }}>
+                                Documentação
+                            </Typography>
 
-                    <Box sx={{ p: 3, border: '1px dashed', borderColor: 'divider', borderRadius: 2, bgcolor: 'background.default', textAlign: 'center' }}>
+                            <Paper variant="outlined" sx={{ p: 4, textAlign: 'center', borderStyle: 'dashed', backgroundColor: 'grey.50' }}>
+                                <Button
+                                    variant="contained"
+                                    component="label"
+                                    startIcon={<Upload />}
+                                    size="large"
+                                    sx={{ mb: 2 }}
+                                >
+                                    Selecionar Arquivos
+                                    <input type="file" hidden accept=".pdf,.jpg,.jpeg,.png" multiple onChange={handleFileChange} />
+                                </Button>
+                                <Typography variant="caption" display="block" color="text.secondary">
+                                    Formatos: PDF, JPG, PNG (Max 5MB)
+                                </Typography>
+
+                                {files.length > 0 && (
+                                    <Stack spacing={1} sx={{ mt: 3, alignItems: 'center' }}>
+                                        {files.map((file, idx) => (
+                                            <Paper key={idx} elevation={1} sx={{ p: 1, px: 2, display: 'flex', alignItems: 'center', gap: 2, width: 'fit-content' }}>
+                                                <CheckCircle size={16} color="green" />
+                                                <Typography variant="body2">{file.name}</Typography>
+                                                <IconButton size="small" onClick={() => removeFile(idx)} color="error">
+                                                    <Trash2 size={16} />
+                                                </IconButton>
+                                            </Paper>
+                                        ))}
+                                    </Stack>
+                                )}
+                            </Paper>
+                        </Box>
+
+                        <Box sx={{ mt: 3 }}>
+                            <FormControlLabel
+                                control={<Checkbox {...register('consent_given')} />}
+                                label={<Typography variant="body2" color="text.secondary">Declaro que li e aceito o tratamento dos meus dados pessoais conforme a Política de Privacidade e LGPD.</Typography>}
+                            />
+                            {errors.consent_given && <Typography color="error" variant="caption" display="block">{errors.consent_given.message}</Typography>}
+                        </Box>
+
                         <Button
-                            variant="outlined"
-                            component="label"
-                            startIcon={<Upload />}
+                            type="submit"
+                            variant="contained"
                             size="large"
+                            fullWidth
+                            disabled={isLoading || !personType}
+                            sx={{ py: 2, fontSize: '1.1rem', fontWeight: 'bold', boxShadow: 3 }}
                         >
-                            Selecionar Arquivos (PDF, JPG, PNG)
-                            <input type="file" hidden accept=".pdf,.jpg,.jpeg,.png" multiple onChange={handleFileChange} />
+                            {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Confirmar Inscrição'}
                         </Button>
-                        <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 1 }}>
-                            Tamanho máximo: 5MB por arquivo.
-                        </Typography>
-                        {files && files.length > 0 && (
-                            <Box sx={{ mt: 2 }}>
-                                {Array.from(files).map((file, idx) => (
-                                    <Typography key={idx} variant="body2" color="success.main" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                                        <CheckCircle size={14} /> {file.name}
-                                    </Typography>
-                                ))}
-                            </Box>
-                        )}
-                    </Box>
-
-                    <Box sx={{ mt: 3 }}>
-                        <FormControlLabel
-                            control={<Checkbox {...register('consent_given')} />}
-                            label={<Typography variant="body2" color="text.secondary">Declaro que li e aceito o tratamento dos meus dados pessoais conforme a Política de Privacidade e LGPD.</Typography>}
-                        />
-                        {errors.consent_given && <Typography color="error" variant="caption" display="block">{errors.consent_given.message}</Typography>}
-                    </Box>
-
-                    <Button
-                        type="submit"
-                        variant="contained"
-                        size="large"
-                        fullWidth
-                        disabled={isLoading || !personType}
-                        sx={{ mt: 4, py: 1.5, fontSize: '1.1rem', fontWeight: 'bold' }}
-                    >
-                        {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Enviar Solicitação'}
-                    </Button>
+                    </Stack>
                 </Box>
             </Paper>
         </Container>

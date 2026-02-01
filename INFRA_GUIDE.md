@@ -27,3 +27,32 @@
 
 ## Data Persistence
 - Database data is persisted in the `postgres_data` volume.
+
+## Deployment (Production)
+
+### Render.com Configuration
+This project uses **Vite 7**, which requires **Node.js 20.19.0+** or **22.12+**.
+
+1. **Environment**:
+   - Ensure the Build Environment is set to use Node 20.19.0.
+   - The project includes an `.nvmrc` file (20.19.0) and `package.json` engines config (`>=20.19.0`) which Render should auto-detect.
+
+2. **Build Command**:
+   ```bash
+   npm install && npm run build
+   ```
+
+3. **Publish Directory**:
+   ```bash
+   dist
+   ```
+
+### Troubleshooting
+If the build fails with "Unsupported Node version", ensure your environment variables or platform settings are explicitly set to Node 20.
+
+### Validation
+To simulate the production build locally:
+```bash
+npm run build
+npm run preview
+```

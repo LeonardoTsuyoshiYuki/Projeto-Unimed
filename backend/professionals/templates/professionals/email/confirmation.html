@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px; }
+        .header { color: #00652e; }
+        .card { background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .label { font-weight: bold; }
+        .status { color: #00652e; font-weight: bold; }
+        .footer { font-size: 12px; color: #777; margin-top: 20px; border-top: 1px solid #eee; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="header">Olá {{ name }},</h2>
+        <p>{{ intro_msg|safe }}</p>
+        
+        <div class="card">
+            <h3 style="margin-top: 0; font-size: 16px;">Dados do Cadastro:</h3>
+            <ul style="list-style: none; padding-left: 0;">
+                <li><span class="label">Tipo:</span> {{ profile_type }}</li>
+                <li><span class="label">{{ doc_label }}:</span> {{ doc_value }}</li>
+                <li><span class="label">Status:</span> <span class="status">{{ status_display }}</span></li>
+            </ul>
+        </div>
+        
+        {% if not is_status_update %}
+        <p>Em breve nossa equipe fará a validação das informações e você receberá novas instruções por este e-mail.</p>
+        {% endif %}
+        
+        <div class="footer">
+            Atenciosamente,<br>
+            <strong>Equipe de Credenciamento Unimed</strong>
+        </div>
+    </div>
+</body>
+</html>

@@ -2,6 +2,9 @@
   "name": "frontend_tmp",
   "private": true,
   "version": "0.0.0",
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -37,8 +40,5 @@
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
     "vite": "^7.2.4"
-  },
-  "engines": {
-    "node": ">=20.x"
   }
 }

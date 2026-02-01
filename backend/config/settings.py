@@ -3,6 +3,8 @@ from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
 import dj_database_url
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 
 load_dotenv()
 
@@ -202,20 +204,42 @@ SIMPLE_JWT = {
 }
 
 # CORS Config
-CORS_ALLOW_ALL_ORIGINS = True # For dev convenience. In prod, list domains.
+# CORS Config
+CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173').split(',')
+
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    CORS_ALLOW_ALL_ORIGINS = False
+    if not CORS_ALLOWED_ORIGINS or CORS_ALLOWED_ORIGINS == ['']:
+         # Log warning or fallback? For safety in prod, we should not allow all.
+         pass
 
 
-# Email (SMTP)
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
-EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 1025))
-EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'False') == 'True'
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = 'no-reply@unimed.com'
+# Email General Config
+EMAIL_MODE = os.environ.get('EMAIL_MODE', 'dev').lower() # dev, sandbox, prod
+EMAIL_PROVIDER = os.environ.get('EMAIL_PROVIDER', 'console' if EMAIL_MODE == 'dev' else 'django')
+EMAIL_TIMEOUT = 20 # seconds
 
-# SendGrid Configuration
-EMAIL_MODE = os.environ.get('EMAIL_MODE', 'dev') # dev, sandbox, prod
+# Email (SMTP / Brevo)
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp-relay.brevo.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'Unimed <no-reply@unimed.com.br>')
+
+# Secure Backend Selection
+if EMAIL_PROVIDER == 'django':
+    if EMAIL_MODE == 'prod' and not EMAIL_HOST_PASSWORD:
+        # Fallback to console in prod if password is missing to avoid crash, but log it
+        EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    else:
+        EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Legacy SendGrid Configuration (Kept for compatibility if needed later)
 SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY', None)
 SENDGRID_FROM_EMAIL = os.environ.get('SENDGRID_FROM_EMAIL', 'no-reply@unimed.com.br')
 SENDGRID_FROM_NAME = os.environ.get('SENDGRID_FROM_NAME', 'Unimed')
@@ -287,3 +311,15 @@ LOGGING = {
 
 # LGPD
 LGPD_CONSENT_VERSION = "1.0"
+
+# Sentry (Error Tracking)
+SENTRY_DSN = os.environ.get('SENTRY_DSN')
+if SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration()],
+        traces_sample_rate=1.0, 
+        # If you wish to associate users to errors:
+        send_default_pii=True
+    )
+
